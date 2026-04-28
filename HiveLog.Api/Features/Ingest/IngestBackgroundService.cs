@@ -1,4 +1,5 @@
 using HiveLog.Api.Features.Logs.Models;
+using HiveLog.Api.Features.Rules;
 using HiveLog.Api.Features.Stream;
 using Microsoft.Extensions.Options;
 
@@ -19,6 +20,7 @@ public sealed class IngestBackgroundService : BackgroundService
     private readonly IngestMetrics _metrics;
     private readonly SelfLogger _selfLogger;
     private readonly StreamBroadcaster _broadcaster;
+    private readonly RulesEngine _rulesEngine;
     private readonly IngestOptions _opts;
     private readonly ILogger<IngestBackgroundService> _logger;
 
@@ -32,6 +34,7 @@ public sealed class IngestBackgroundService : BackgroundService
         IngestMetrics metrics,
         SelfLogger selfLogger,
         StreamBroadcaster broadcaster,
+        RulesEngine rulesEngine,
         IOptions<IngestOptions> opts,
         ILogger<IngestBackgroundService> logger)
     {
@@ -40,6 +43,7 @@ public sealed class IngestBackgroundService : BackgroundService
         _metrics = metrics;
         _selfLogger = selfLogger;
         _broadcaster = broadcaster;
+        _rulesEngine = rulesEngine;
         _opts = opts.Value;
         _logger = logger;
     }
@@ -196,6 +200,16 @@ public sealed class IngestBackgroundService : BackgroundService
             await _writer.WriteBatchAsync(batch, ct);
             _metrics.RecordFlushed(batch.Count);
             _broadcaster.Publish(batch); // Notify SSE subscribers after successful DB write
+
+            // Evaluate webhook rules against the newly persisted entries
+            try
+            {
+                await _rulesEngine.EvaluateAsync(batch, ct);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "[HiveLog] Rules evaluation failed — batch persisted successfully");
+            }
         }
         catch (Exception ex)
         {

@@ -1,4 +1,5 @@
 using HiveLog.Api.Features.Logs.Models;
+using HiveLog.Api.Features.Rules.Models;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
@@ -11,6 +12,7 @@ public class HiveLogDbContext : DbContext
     }
 
     public DbSet<LogEntry> LogEntries { get; set; } = null!;
+    public DbSet<WebhookRule> WebhookRules { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -32,6 +34,15 @@ public class HiveLogDbContext : DbContext
                 .HasColumnType("text[]");
 
             // Indexes are created via Raw SQL in migration (IF NOT EXISTS for idempotency)
+        });
+
+        modelBuilder.Entity<WebhookRule>(entity =>
+        {
+            entity.Property(e => e.Id)
+                .HasDefaultValueSql("gen_random_uuid()");
+
+            entity.Property(e => e.TriggerTags)
+                .HasColumnType("text[]");
         });
     }
 

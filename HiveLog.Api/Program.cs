@@ -3,6 +3,7 @@ using HiveLog.Api.Features.Admin;
 using HiveLog.Api.Features.Aggregate;
 using HiveLog.Api.Features.Ingest;
 using HiveLog.Api.Features.Retention;
+using HiveLog.Api.Features.Rules;
 using HiveLog.Api.Features.Stream;
 using HiveLog.Api.Health;
 using HiveLog.Api.Persistence;
@@ -34,6 +35,7 @@ public class Program
             // If upgrading to Npgsql 10+, add: dataSourceBuilder.ConnectionStringBuilder.GssEncryptionMode = GssEncryptionMode.Disable;
             options.UseNpgsql(connectionString);
         });
+
 
         // ---------------------------------------------------------------------------
         // Ingest Pipeline
@@ -76,6 +78,21 @@ public class Program
             builder.Configuration.GetSection(AdminOptions.SectionName));
         builder.Services.AddSingleton<AdminApiKeyFilter>();
         builder.Services.AddSingleton<RuntimeRetentionService>();
+
+        // ---------------------------------------------------------------------------
+        // Webhook Rules Engine
+        // ---------------------------------------------------------------------------
+        // Named HttpClient for outgoing webhook POST requests (5s timeout)
+        builder.Services.AddHttpClient("webhooks", client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(5);
+        });
+
+        // RulesCache: singleton + hosted service (periodic 30s refresh)
+        builder.Services.AddSingleton<RulesCache>();
+        builder.Services.AddHostedService(sp => sp.GetRequiredService<RulesCache>());
+
+        builder.Services.AddSingleton<RulesEngine>();
 
         // ---------------------------------------------------------------------------
         // Continuous Aggregates
