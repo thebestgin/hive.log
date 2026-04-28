@@ -1,0 +1,12 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+## Environment files (never commit real secrets)
+.env
+
+## Build output
+publish/
