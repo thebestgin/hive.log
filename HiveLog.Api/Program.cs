@@ -1,4 +1,5 @@
 using HiveLog.Api.Features.Ingest;
+using HiveLog.Api.Features.Retention;
 using HiveLog.Api.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -46,6 +47,15 @@ public class Program
         builder.Services.AddSingleton<LogEntryCopyWriter>();
 
         builder.Services.AddHostedService<IngestBackgroundService>();
+
+        // ---------------------------------------------------------------------------
+        // Retention + Compression
+        // ---------------------------------------------------------------------------
+        builder.Services.Configure<RetentionOptions>(
+            builder.Configuration.GetSection(RetentionOptions.SectionName));
+
+        builder.Services.AddHostedService<TimescalePolicyInitializer>();
+        builder.Services.AddHostedService<RetentionCleanupJob>();
 
         // ---------------------------------------------------------------------------
         // Health Checks
