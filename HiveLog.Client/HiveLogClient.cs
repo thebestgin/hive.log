@@ -14,7 +14,7 @@ public sealed class HiveLogClient : IHiveLogClient
     private readonly HiveLogBatchBuffer _buffer;
     private readonly HiveLogOptions _options;
 
-    internal HiveLogClient(HiveLogBatchBuffer buffer, IOptions<HiveLogOptions> options)
+    public HiveLogClient(HiveLogBatchBuffer buffer, IOptions<HiveLogOptions> options)
     {
         _buffer = buffer;
         _options = options.Value;

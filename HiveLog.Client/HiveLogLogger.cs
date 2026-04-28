@@ -48,7 +48,10 @@ internal sealed class HiveLogLogger : ILogger
                 .Where(kv => kv.Key != "{OriginalFormat}")
                 .ToDictionary(kv => kv.Key, kv => kv.Value);
             if (props.Count > 0)
-                propertiesJson = JsonSerializer.Serialize(props);
+            {
+                try { propertiesJson = JsonSerializer.Serialize(props); }
+                catch { /* unserializable property values (e.g. IPEndPoint.ScopeId on Linux) — skip */ }
+            }
         }
 
         string? exceptionJson = null;

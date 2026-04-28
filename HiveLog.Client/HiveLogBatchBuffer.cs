@@ -7,7 +7,7 @@ namespace HiveLog.Client;
 /// Thread-safe bounded channel buffer for outgoing log entries.
 /// Uses DropOldest — fire-and-forget, ILogger.Log() never blocks.
 /// </summary>
-internal sealed class HiveLogBatchBuffer
+public sealed class HiveLogBatchBuffer
 {
     private readonly Channel<ClientLogEntry> _channel;
 

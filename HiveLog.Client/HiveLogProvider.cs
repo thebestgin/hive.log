@@ -15,7 +15,7 @@ public sealed class HiveLogProvider : ILoggerProvider
     private readonly HiveLogOptions _options;
     private readonly ConcurrentDictionary<string, HiveLogLogger> _loggers = new();
 
-    internal HiveLogProvider(HiveLogBatchBuffer buffer, IOptions<HiveLogOptions> options)
+    public HiveLogProvider(HiveLogBatchBuffer buffer, IOptions<HiveLogOptions> options)
     {
         _buffer = buffer;
         _options = options.Value;
