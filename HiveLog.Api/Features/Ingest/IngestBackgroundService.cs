@@ -1,4 +1,5 @@
 using HiveLog.Api.Features.Logs.Models;
+using HiveLog.Api.Features.Stream;
 using Microsoft.Extensions.Options;
 
 namespace HiveLog.Api.Features.Ingest;
@@ -16,6 +17,7 @@ public sealed class IngestBackgroundService : BackgroundService
     private readonly IngestBuffer _buffer;
     private readonly LogEntryCopyWriter _writer;
     private readonly IngestMetrics _metrics;
+    private readonly StreamBroadcaster _broadcaster;
     private readonly IngestOptions _opts;
     private readonly ILogger<IngestBackgroundService> _logger;
 
@@ -23,12 +25,14 @@ public sealed class IngestBackgroundService : BackgroundService
         IngestBuffer buffer,
         LogEntryCopyWriter writer,
         IngestMetrics metrics,
+        StreamBroadcaster broadcaster,
         IOptions<IngestOptions> opts,
         ILogger<IngestBackgroundService> logger)
     {
         _buffer = buffer;
         _writer = writer;
         _metrics = metrics;
+        _broadcaster = broadcaster;
         _opts = opts.Value;
         _logger = logger;
     }
@@ -116,6 +120,7 @@ public sealed class IngestBackgroundService : BackgroundService
         {
             await _writer.WriteBatchAsync(batch, ct);
             _metrics.RecordFlushed(batch.Count);
+            _broadcaster.Publish(batch); // Notify SSE subscribers after successful DB write
         }
         catch (Exception ex)
         {

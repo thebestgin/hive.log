@@ -1,5 +1,6 @@
 using HiveLog.Api.Features.Ingest;
 using HiveLog.Api.Features.Retention;
+using HiveLog.Api.Features.Stream;
 using HiveLog.Api.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -40,6 +41,7 @@ public class Program
 
         builder.Services.AddSingleton(new IngestBuffer(ingestOpts.ChannelCapacity));
         builder.Services.AddSingleton<IngestMetrics>();
+        builder.Services.AddSingleton<StreamBroadcaster>();
 
         // Separate NpgsqlDataSource for COPY writer (independent connection pool)
         var copyDataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
