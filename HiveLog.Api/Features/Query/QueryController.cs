@@ -3,6 +3,7 @@ using HiveLog.Api.Features.Ingest;
 using HiveLog.Api.Features.Query.Models;
 using HiveLog.Api.Features.Query.NaturalLanguage;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Npgsql;
 using NpgsqlTypes;
 
@@ -14,18 +15,28 @@ public class QueryController : ControllerBase
 {
     private const double SlowQueryThresholdMs = 500.0;
 
+    // Confidence for LLM-generated SQL — lower than template-matcher minimum (0.7)
+    // so callers can distinguish template-matched vs LLM-generated results.
+    private const double LlmConfidence = 0.6;
+
     private readonly NpgsqlDataSource _dataSource;
     private readonly IngestMetrics _metrics;
     private readonly SelfLogger _selfLogger;
+    private readonly LlmQueryGenerator _llmQueryGenerator;
+    private readonly NlQueryOptions _nlQueryOptions;
 
     public QueryController(
         NpgsqlDataSource dataSource,
         IngestMetrics metrics,
-        SelfLogger selfLogger)
+        SelfLogger selfLogger,
+        LlmQueryGenerator llmQueryGenerator,
+        IOptions<NlQueryOptions> nlQueryOptions)
     {
         _dataSource = dataSource;
         _metrics = metrics;
         _selfLogger = selfLogger;
+        _llmQueryGenerator = llmQueryGenerator;
+        _nlQueryOptions = nlQueryOptions.Value;
     }
 
     /// <summary>
@@ -120,11 +131,17 @@ public class QueryController : ControllerBase
         var parsed = TemplateQueryParser.TryParse(request.Query);
         if (parsed is null)
         {
-            return Ok(new NaturalQueryResponse
+            // Stufe 2: LLM fallback via Ollama
+            if (!_nlQueryOptions.Enabled)
             {
-                Confidence = 0,
-                Error = "no_match"
-            });
+                return Ok(new NaturalQueryResponse
+                {
+                    Confidence = 0,
+                    Error = "no_match"
+                });
+            }
+
+            return await QueryNaturalWithLlm(request.Query, ct);
         }
 
         string sql;
@@ -208,6 +225,75 @@ public class QueryController : ControllerBase
                     Confidence = parsed.Confidence
                 });
             }
+        }
+        catch
+        {
+            await tx.RollbackAsync(ct);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Stufe 2: Falls the template-matcher found no match, asks Ollama to generate SQL.
+    /// The generated SQL is validated before execution (read-only + whitelist tables).
+    /// </summary>
+    private async Task<IActionResult> QueryNaturalWithLlm(string userQuery, CancellationToken ct)
+    {
+        string? sql;
+        try
+        {
+            sql = await _llmQueryGenerator.GenerateAsync(userQuery, ct);
+        }
+        catch (SqlValidationException ex)
+        {
+            _selfLogger.Warn("LLM generated unsafe SQL", new { reason = ex.Message, query = userQuery });
+            return Ok(new NaturalQueryResponse
+            {
+                Confidence = 0,
+                Error = "unsafe_sql"
+            });
+        }
+
+        if (sql is null)
+        {
+            return Ok(new NaturalQueryResponse
+            {
+                Confidence = 0,
+                Error = "no_match"
+            });
+        }
+
+        var sw = Stopwatch.StartNew();
+
+        await using var conn = await _dataSource.OpenConnectionAsync(ct);
+
+        // Read-only transaction — defence-in-depth on top of SQL validation
+        await using var tx = await conn.BeginTransactionAsync(
+            System.Data.IsolationLevel.ReadCommitted, ct);
+        await using var setReadOnly = new NpgsqlCommand("SET TRANSACTION READ ONLY", conn, tx);
+        await setReadOnly.ExecuteNonQueryAsync(ct);
+
+        try
+        {
+            var entries = new List<LogEntryResult>();
+            await using var cmd = new NpgsqlCommand(sql, conn, tx);
+            await using var reader = await cmd.ExecuteReaderAsync(ct);
+            while (await reader.ReadAsync(ct))
+            {
+                entries.Add(MapRow(reader));
+            }
+
+            await tx.RollbackAsync(ct);
+
+            sw.Stop();
+            RecordQueryMetrics(sw.Elapsed.TotalMilliseconds, "query/natural/llm");
+
+            return Ok(new NaturalQueryResponse
+            {
+                Sql = sql,
+                Result = new QueryResponse { Entries = entries },
+                Confidence = LlmConfidence
+            });
         }
         catch
         {

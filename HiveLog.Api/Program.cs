@@ -2,6 +2,7 @@ using System.Text.Json;
 using HiveLog.Api.Features.Admin;
 using HiveLog.Api.Features.Aggregate;
 using HiveLog.Api.Features.Ingest;
+using HiveLog.Api.Features.Query.NaturalLanguage;
 using HiveLog.Api.Features.Retention;
 using HiveLog.Api.Features.Rules;
 using HiveLog.Api.Features.Stream;
@@ -78,6 +79,23 @@ public class Program
             builder.Configuration.GetSection(AdminOptions.SectionName));
         builder.Services.AddSingleton<AdminApiKeyFilter>();
         builder.Services.AddSingleton<RuntimeRetentionService>();
+
+        // ---------------------------------------------------------------------------
+        // NL-to-SQL — Stufe 2: Ollama LLM fallback
+        // ---------------------------------------------------------------------------
+        builder.Services.Configure<NlQueryOptions>(
+            builder.Configuration.GetSection(NlQueryOptions.SectionName));
+
+        var nlQueryOpts = builder.Configuration
+            .GetSection(NlQueryOptions.SectionName)
+            .Get<NlQueryOptions>() ?? new NlQueryOptions();
+
+        builder.Services.AddHttpClient<LlmQueryGenerator>(client =>
+        {
+            client.BaseAddress = new Uri(nlQueryOpts.OllamaBaseUrl);
+            // LLM inference on CPU can be slow — 30s timeout
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
 
         // ---------------------------------------------------------------------------
         // Webhook Rules Engine
