@@ -17,6 +17,7 @@ public sealed class IngestBackgroundService : BackgroundService
     private readonly IngestBuffer _buffer;
     private readonly LogEntryCopyWriter _writer;
     private readonly IngestMetrics _metrics;
+    private readonly SelfLogger _selfLogger;
     private readonly StreamBroadcaster _broadcaster;
     private readonly IngestOptions _opts;
     private readonly ILogger<IngestBackgroundService> _logger;
@@ -25,6 +26,7 @@ public sealed class IngestBackgroundService : BackgroundService
         IngestBuffer buffer,
         LogEntryCopyWriter writer,
         IngestMetrics metrics,
+        SelfLogger selfLogger,
         StreamBroadcaster broadcaster,
         IOptions<IngestOptions> opts,
         ILogger<IngestBackgroundService> logger)
@@ -32,6 +34,7 @@ public sealed class IngestBackgroundService : BackgroundService
         _buffer = buffer;
         _writer = writer;
         _metrics = metrics;
+        _selfLogger = selfLogger;
         _broadcaster = broadcaster;
         _opts = opts.Value;
         _logger = logger;
@@ -126,6 +129,10 @@ public sealed class IngestBackgroundService : BackgroundService
         {
             _logger.LogWarning(ex, "[HiveLog] Batch write failed ({Count} entries)", batch.Count);
             _metrics.RecordDropped(batch.Count);
+
+            _selfLogger.Error(
+                $"Flush failed: {ex.Message}",
+                new { entryCount = batch.Count, exceptionType = ex.GetType().Name });
         }
     }
 

@@ -56,5 +56,14 @@ public sealed class IngestBuffer
         return count;
     }
 
+    /// <summary>
+    /// Synchronous non-blocking write for internal self-logging.
+    /// Returns false if the buffer is currently full — no wait, no exception.
+    /// </summary>
+    public bool TryWriteSync(LogEntry entry) => _channel.Writer.TryWrite(entry);
+
+    /// <summary>Current number of items waiting in the buffer.</summary>
+    public int Count => _channel.Reader.Count;
+
     public void Complete() => _channel.Writer.Complete();
 }

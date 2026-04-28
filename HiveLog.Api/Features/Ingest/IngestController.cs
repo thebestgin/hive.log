@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using HiveLog.Api.Features.Ingest.Models;
 using HiveLog.Api.Features.Logs.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -11,15 +12,18 @@ public class IngestController : ControllerBase
 {
     private readonly IngestBuffer _buffer;
     private readonly IngestMetrics _metrics;
+    private readonly SelfLogger _selfLogger;
     private readonly IngestOptions _opts;
 
     public IngestController(
         IngestBuffer buffer,
         IngestMetrics metrics,
+        SelfLogger selfLogger,
         IOptions<IngestOptions> opts)
     {
         _buffer = buffer;
         _metrics = metrics;
+        _selfLogger = selfLogger;
         _opts = opts.Value;
     }
 
@@ -38,6 +42,9 @@ public class IngestController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
+        var sw = Stopwatch.StartNew();
+        _metrics.RecordIngestRequest();
+
         int accepted = 0;
         foreach (var dto in request.Entries)
         {
@@ -49,12 +56,25 @@ public class IngestController : ControllerBase
                 // Buffer full — drop remaining entries and report 503
                 var dropped = request.Entries.Count - accepted;
                 _metrics.RecordDropped(dropped);
+
+                _selfLogger.Warn(
+                    "Ingest buffer full — entries dropped",
+                    new { droppedCount = dropped, accepted });
+
+                sw.Stop();
+                _metrics.RecordIngestLatency(sw.Elapsed.TotalMilliseconds);
+
                 return StatusCode(StatusCodes.Status503ServiceUnavailable,
                     new { error = "Buffer full", accepted, dropped });
             }
 
             accepted++;
         }
+
+        _metrics.RecordIngestEntries(accepted);
+
+        sw.Stop();
+        _metrics.RecordIngestLatency(sw.Elapsed.TotalMilliseconds);
 
         return Accepted(new IngestResponse { Accepted = accepted });
     }

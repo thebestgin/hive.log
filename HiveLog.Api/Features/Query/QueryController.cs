@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using HiveLog.Api.Features.Ingest;
 using HiveLog.Api.Features.Query.Models;
 using HiveLog.Api.Features.Query.NaturalLanguage;
 using Microsoft.AspNetCore.Mvc;
@@ -10,11 +12,20 @@ namespace HiveLog.Api.Features.Query;
 [Route("api/hivelog/v1")]
 public class QueryController : ControllerBase
 {
-    private readonly NpgsqlDataSource _dataSource;
+    private const double SlowQueryThresholdMs = 500.0;
 
-    public QueryController(NpgsqlDataSource dataSource)
+    private readonly NpgsqlDataSource _dataSource;
+    private readonly IngestMetrics _metrics;
+    private readonly SelfLogger _selfLogger;
+
+    public QueryController(
+        NpgsqlDataSource dataSource,
+        IngestMetrics metrics,
+        SelfLogger selfLogger)
     {
         _dataSource = dataSource;
+        _metrics = metrics;
+        _selfLogger = selfLogger;
     }
 
     /// <summary>
@@ -46,6 +57,8 @@ public class QueryController : ControllerBase
         var effectiveLimit = Math.Clamp(request.Limit, 1, 1000);
         var entries = new List<LogEntryResult>();
 
+        var sw = Stopwatch.StartNew();
+
         await using var conn = await _dataSource.OpenConnectionAsync(ct);
         await using var cmd = new NpgsqlCommand(sql, conn);
         cmd.Parameters.AddRange(parameters);
@@ -54,6 +67,17 @@ public class QueryController : ControllerBase
         while (await reader.ReadAsync(ct))
         {
             entries.Add(MapRow(reader));
+        }
+
+        sw.Stop();
+        var elapsedMs = sw.Elapsed.TotalMilliseconds;
+        _metrics.RecordQueryLatency(elapsedMs);
+
+        if (elapsedMs > SlowQueryThresholdMs)
+        {
+            _selfLogger.Warn(
+                "Slow query detected",
+                new { elapsedMs = (long)elapsedMs, endpoint = "query" });
         }
 
         // We fetched limit+1 — if we got more than limit, there's a next page
@@ -117,6 +141,8 @@ public class QueryController : ControllerBase
             return BadRequest(new { error = ex.Message });
         }
 
+        var sw = Stopwatch.StartNew();
+
         await using var conn = await _dataSource.OpenConnectionAsync(ct);
 
         // Read-only transaction — security guard: generated SQL must not write data
@@ -135,6 +161,10 @@ public class QueryController : ControllerBase
                 var count = Convert.ToInt64(scalar ?? 0L);
 
                 await tx.RollbackAsync(ct);
+
+                sw.Stop();
+                RecordQueryMetrics(sw.Elapsed.TotalMilliseconds, "query/natural");
+
                 return Ok(new NaturalQueryResponse
                 {
                     InterpretedQuery = parsed.Request,
@@ -166,6 +196,10 @@ public class QueryController : ControllerBase
                 }
 
                 await tx.RollbackAsync(ct);
+
+                sw.Stop();
+                RecordQueryMetrics(sw.Elapsed.TotalMilliseconds, "query/natural");
+
                 return Ok(new NaturalQueryResponse
                 {
                     InterpretedQuery = parsed.Request,
@@ -179,6 +213,18 @@ public class QueryController : ControllerBase
         {
             await tx.RollbackAsync(ct);
             throw;
+        }
+    }
+
+    private void RecordQueryMetrics(double elapsedMs, string endpoint)
+    {
+        _metrics.RecordQueryLatency(elapsedMs);
+
+        if (elapsedMs > SlowQueryThresholdMs)
+        {
+            _selfLogger.Warn(
+                "Slow query detected",
+                new { elapsedMs = (long)elapsedMs, endpoint });
         }
     }
 

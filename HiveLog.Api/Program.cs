@@ -1,9 +1,13 @@
+using System.Text.Json;
 using HiveLog.Api.Features.Aggregate;
 using HiveLog.Api.Features.Ingest;
 using HiveLog.Api.Features.Retention;
 using HiveLog.Api.Features.Stream;
+using HiveLog.Api.Health;
 using HiveLog.Api.Persistence;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Npgsql;
 
 namespace HiveLog.Api;
@@ -42,6 +46,7 @@ public class Program
 
         builder.Services.AddSingleton(new IngestBuffer(ingestOpts.ChannelCapacity));
         builder.Services.AddSingleton<IngestMetrics>();
+        builder.Services.AddSingleton<SelfLogger>();
         builder.Services.AddSingleton<StreamBroadcaster>();
 
         // Separate NpgsqlDataSource for COPY writer (independent connection pool)
@@ -69,7 +74,8 @@ public class Program
         // Health Checks
         // ---------------------------------------------------------------------------
         builder.Services.AddHealthChecks()
-            .AddNpgSql(connectionString, name: "database");
+            .AddNpgSql(connectionString, name: "database")
+            .AddCheck<HiveLogHealthCheck>("hivelog");
 
         // ---------------------------------------------------------------------------
         // Controllers + JSON
@@ -123,8 +129,46 @@ public class Program
 
         app.MapControllers();
 
-        app.MapHealthChecks("/health");
+        // Health endpoint returns JSON body including bufferDepth + droppedTotal
+        app.MapHealthChecks("/health", new HealthCheckOptions
+        {
+            ResponseWriter = WriteHealthResponse
+        });
 
         app.Run();
+    }
+
+    private static async Task WriteHealthResponse(HttpContext context, HealthReport report)
+    {
+        context.Response.ContentType = "application/json";
+
+        var status = report.Status switch
+        {
+            HealthStatus.Healthy => "Healthy",
+            HealthStatus.Degraded => "Degraded",
+            _ => "Unhealthy"
+        };
+
+        // Extract HiveLog-specific data from the custom health check
+        int bufferDepth = 0;
+        long droppedTotal = 0;
+
+        if (report.Entries.TryGetValue("hivelog", out var hiveEntry) && hiveEntry.Data is not null)
+        {
+            if (hiveEntry.Data.TryGetValue("bufferDepth", out var bd))
+                bufferDepth = bd is int i ? i : 0;
+            if (hiveEntry.Data.TryGetValue("droppedTotal", out var dt))
+                droppedTotal = dt is long l ? l : 0;
+        }
+
+        var response = new
+        {
+            status,
+            bufferDepth,
+            droppedTotal,
+        };
+
+        await context.Response.WriteAsync(JsonSerializer.Serialize(response,
+            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }));
     }
 }
