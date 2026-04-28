@@ -1,5 +1,7 @@
+using HiveLog.Api.Features.Ingest;
 using HiveLog.Api.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace HiveLog.Api;
 
@@ -24,6 +26,26 @@ public class Program
             // If upgrading to Npgsql 10+, add: dataSourceBuilder.ConnectionStringBuilder.GssEncryptionMode = GssEncryptionMode.Disable;
             options.UseNpgsql(connectionString);
         });
+
+        // ---------------------------------------------------------------------------
+        // Ingest Pipeline
+        // ---------------------------------------------------------------------------
+        builder.Services.Configure<IngestOptions>(
+            builder.Configuration.GetSection(IngestOptions.SectionName));
+
+        var ingestOpts = builder.Configuration
+            .GetSection(IngestOptions.SectionName)
+            .Get<IngestOptions>() ?? new IngestOptions();
+
+        builder.Services.AddSingleton(new IngestBuffer(ingestOpts.ChannelCapacity));
+        builder.Services.AddSingleton<IngestMetrics>();
+
+        // Separate NpgsqlDataSource for COPY writer (independent connection pool)
+        var copyDataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
+        builder.Services.AddSingleton(copyDataSourceBuilder.Build());
+        builder.Services.AddSingleton<LogEntryCopyWriter>();
+
+        builder.Services.AddHostedService<IngestBackgroundService>();
 
         // ---------------------------------------------------------------------------
         // Health Checks
