@@ -48,7 +48,7 @@ public class IngestController : ControllerBase
         int accepted = 0;
         foreach (var dto in request.Entries)
         {
-            var entry = MapToEntity(dto);
+            var entry = MapToEntity(dto, request);
 
             var written = await _buffer.TryWriteAsync(entry, _opts.WriteTimeout, ct);
             if (!written)
@@ -79,15 +79,15 @@ public class IngestController : ControllerBase
         return Accepted(new IngestResponse { Accepted = accepted });
     }
 
-    private static LogEntry MapToEntity(LogEntryDto dto) => new()
+    private static LogEntry MapToEntity(LogEntryDto dto, IngestRequest request) => new()
     {
         Timestamp = dto.Timestamp,
         Id = dto.Id ?? Guid.NewGuid(),
         TraceId = dto.TraceId,
         SpanId = dto.SpanId,
-        Source = dto.Source,
-        SourceType = dto.SourceType,
-        InstanceId = dto.InstanceId,
+        Source = request.Source,
+        SourceType = request.SourceType,
+        InstanceId = request.InstanceId,
         Level = dto.Level,
         Category = dto.Category,
         Message = dto.Message,

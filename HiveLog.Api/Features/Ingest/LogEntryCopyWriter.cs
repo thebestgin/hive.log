@@ -44,13 +44,13 @@ public sealed class LogEntryCopyWriter
             await writer.WriteAsync(e.Timestamp, NpgsqlDbType.TimestampTz, ct);
             await writer.WriteAsync(e.Id, NpgsqlDbType.Uuid, ct);
 
-            if (e.TraceId.HasValue)
-                await writer.WriteAsync(e.TraceId.Value, NpgsqlDbType.Uuid, ct);
+            if (e.TraceId is not null)
+                await writer.WriteAsync(e.TraceId, NpgsqlDbType.Text, ct);
             else
                 await writer.WriteNullAsync(ct);
 
-            if (e.SpanId.HasValue)
-                await writer.WriteAsync(e.SpanId.Value, NpgsqlDbType.Uuid, ct);
+            if (e.SpanId is not null)
+                await writer.WriteAsync(e.SpanId, NpgsqlDbType.Text, ct);
             else
                 await writer.WriteNullAsync(ct);
 

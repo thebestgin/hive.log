@@ -19,7 +19,7 @@ public class QueryRequest
     public TimeRangeFilter? TimeRange { get; set; }
 
     /// <summary>Exact trace ID match. Null = no trace filter.</summary>
-    public Guid? TraceId { get; set; }
+    public string? TraceId { get; set; }
 
     /// <summary>Tag filters. Null = no tag filter.</summary>
     public TagFilter? Tags { get; set; }

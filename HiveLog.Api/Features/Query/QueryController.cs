@@ -198,10 +198,14 @@ public class QueryController : ControllerBase
                 await using var cmd = new NpgsqlCommand(sql, conn, tx);
                 cmd.Parameters.AddRange(parameters);
 
-                await using var reader = await cmd.ExecuteReaderAsync(ct);
-                while (await reader.ReadAsync(ct))
+                // Reader must be closed before calling tx.RollbackAsync —
+                // Npgsql does not allow a second command on a connection while a reader is still open.
+                await using (var reader = await cmd.ExecuteReaderAsync(ct))
                 {
-                    entries.Add(MapRow(reader));
+                    while (await reader.ReadAsync(ct))
+                    {
+                        entries.Add(MapRow(reader));
+                    }
                 }
 
                 string? nextCursor = null;
@@ -277,10 +281,15 @@ public class QueryController : ControllerBase
         {
             var entries = new List<LogEntryResult>();
             await using var cmd = new NpgsqlCommand(sql, conn, tx);
-            await using var reader = await cmd.ExecuteReaderAsync(ct);
-            while (await reader.ReadAsync(ct))
+
+            // Reader must be closed before calling tx.RollbackAsync —
+            // Npgsql does not allow a second command on a connection while a reader is still open.
+            await using (var reader = await cmd.ExecuteReaderAsync(ct))
             {
-                entries.Add(MapRow(reader));
+                while (await reader.ReadAsync(ct))
+                {
+                    entries.Add(MapRow(reader));
+                }
             }
 
             await tx.RollbackAsync(ct);
@@ -318,8 +327,8 @@ public class QueryController : ControllerBase
     {
         Timestamp = reader.GetFieldValue<DateTimeOffset>(0),
         Id = reader.GetGuid(1),
-        TraceId = reader.IsDBNull(2) ? null : reader.GetGuid(2),
-        SpanId = reader.IsDBNull(3) ? null : reader.GetGuid(3),
+        TraceId = reader.IsDBNull(2) ? null : reader.GetString(2),
+        SpanId = reader.IsDBNull(3) ? null : reader.GetString(3),
         Source = reader.GetString(4),
         SourceType = reader.GetString(5),
         InstanceId = reader.IsDBNull(6) ? null : reader.GetString(6),

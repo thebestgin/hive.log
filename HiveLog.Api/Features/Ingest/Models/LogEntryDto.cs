@@ -10,17 +10,11 @@ public class LogEntryDto
 
     public Guid? Id { get; set; }
 
-    public Guid? TraceId { get; set; }
-    public Guid? SpanId { get; set; }
+    [StringLength(64)]
+    public string? TraceId { get; set; }
 
-    [Required, StringLength(256)]
-    public string Source { get; set; } = null!;
-
-    [Required, StringLength(64)]
-    public string SourceType { get; set; } = null!;
-
-    [StringLength(128)]
-    public string? InstanceId { get; set; }
+    [StringLength(64)]
+    public string? SpanId { get; set; }
 
     [Required, Range(0, 5)]
     public short Level { get; set; }

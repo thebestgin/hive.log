@@ -9,8 +9,8 @@ public class LogEntryResult
     public DateTimeOffset Timestamp { get; set; }
     public Guid Id { get; set; }
 
-    public Guid? TraceId { get; set; }
-    public Guid? SpanId { get; set; }
+    public string? TraceId { get; set; }
+    public string? SpanId { get; set; }
 
     public string Source { get; set; } = null!;
     public string SourceType { get; set; } = null!;

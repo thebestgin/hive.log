@@ -20,10 +20,10 @@ public class LogEntry
     // --- Correlation ---
 
     [Column("trace_id")]
-    public Guid? TraceId { get; set; }
+    public string? TraceId { get; set; }
 
     [Column("span_id")]
-    public Guid? SpanId { get; set; }
+    public string? SpanId { get; set; }
 
     // --- Source ---
 

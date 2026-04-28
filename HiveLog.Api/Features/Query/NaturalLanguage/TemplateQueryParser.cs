@@ -103,10 +103,10 @@ public static class TemplateQueryParser
 
         // ── Rule 3: Trace-ID lookup (highest priority — very specific) ──────
         var traceMatch = RxTraceId.Match(query);
-        if (traceMatch.Success && Guid.TryParse(traceMatch.Groups["uuid"].Value, out var traceId))
+        if (traceMatch.Success)
         {
             return new ParseResult(
-                new QueryRequest { TraceId = traceId, Limit = 100 },
+                new QueryRequest { TraceId = traceMatch.Groups["uuid"].Value, Limit = 100 },
                 QueryKind.Entries,
                 1.0
             );

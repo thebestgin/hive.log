@@ -91,7 +91,7 @@ public static class QueryBuilder
         // --- TraceId ---
         if (request.TraceId is { } traceId)
         {
-            var p = new NpgsqlParameter($"@p{paramIndex++}", NpgsqlDbType.Uuid) { Value = traceId };
+            var p = new NpgsqlParameter($"@p{paramIndex++}", NpgsqlDbType.Text) { Value = traceId };
             parameters.Add(p);
             sql.AppendLine($"  AND trace_id = {p.ParameterName}");
         }
@@ -228,7 +228,7 @@ public static class QueryBuilder
         // --- TraceId ---
         if (request.TraceId is { } traceId)
         {
-            var p = new NpgsqlParameter($"@p{paramIndex++}", NpgsqlDbType.Uuid) { Value = traceId };
+            var p = new NpgsqlParameter($"@p{paramIndex++}", NpgsqlDbType.Text) { Value = traceId };
             parameters.Add(p);
             sql.AppendLine($"  AND trace_id = {p.ParameterName}");
         }
