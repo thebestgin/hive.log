@@ -50,7 +50,8 @@ internal sealed class HiveLogLogger : ILogger
             if (props.Count > 0)
             {
                 try { propertiesJson = JsonSerializer.Serialize(props); }
-                catch { /* unserializable property values (e.g. IPEndPoint.ScopeId on Linux) — skip */ }
+                catch (Exception ex) when (ex is not OutOfMemoryException)
+                { /* property getter may throw (e.g. IPEndPoint.ScopeId → SocketException on Linux) — skip properties */ }
             }
         }
 

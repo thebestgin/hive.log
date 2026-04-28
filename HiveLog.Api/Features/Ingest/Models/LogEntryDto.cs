@@ -29,9 +29,11 @@ public class LogEntryDto
     public string? MessageTemplate { get; set; }
 
     /// <summary>JSON object as string.</summary>
+    [StringLength(65536)]
     public string? Properties { get; set; }
 
     /// <summary>JSON object as string (exception details).</summary>
+    [StringLength(65536)]
     public string? Exception { get; set; }
 
     public Guid? UserId { get; set; }
