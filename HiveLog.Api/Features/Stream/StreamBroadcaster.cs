@@ -24,6 +24,9 @@ public sealed class StreamBroadcaster
         _logger = logger;
     }
 
+    /// <summary>Current number of active SSE subscribers.</summary>
+    public int SubscriberCount => _subscribers.Count;
+
     /// <summary>
     /// Registers a new subscriber with the given filter.
     /// Returns a StreamSubscription that must be disposed on HTTP disconnect.

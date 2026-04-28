@@ -23,6 +23,9 @@ public sealed class IngestMetrics
     private readonly Histogram<double> _queryLatencyMs;
 
     private long _droppedCount;
+    private long _totalEntries;
+    private long _lastRateCheckTicks;
+    private long _lastEntriesCount;
 
     public IngestMetrics(IMeterFactory meterFactory, IngestBuffer buffer)
     {
@@ -63,11 +66,18 @@ public sealed class IngestMetrics
             "hivelog_query_latency_ms",
             unit: "ms",
             description: "Latency of query HTTP requests in milliseconds");
+
+        _lastRateCheckTicks = DateTimeOffset.UtcNow.Ticks;
+        _lastEntriesCount = 0;
     }
 
     public void RecordIngestRequest() => _ingestTotal.Add(1);
 
-    public void RecordIngestEntries(int count) => _ingestEntriesTotal.Add(count);
+    public void RecordIngestEntries(int count)
+    {
+        _ingestEntriesTotal.Add(count);
+        Interlocked.Add(ref _totalEntries, count);
+    }
 
     public void RecordIngestLatency(double ms) => _ingestLatencyMs.Record(ms);
 
@@ -84,4 +94,24 @@ public sealed class IngestMetrics
 
     /// <summary>Total dropped entries since server start — exposed to /health.</summary>
     public long DroppedTotal => Interlocked.Read(ref _droppedCount);
+
+    /// <summary>
+    /// Calculates the ingest rate per second since the last call.
+    /// Returns 0.0 on the first call (no reference point yet).
+    /// Thread-safe via Interlocked operations.
+    /// </summary>
+    public double GetRatePerSecond()
+    {
+        var nowTicks = DateTimeOffset.UtcNow.Ticks;
+        var currentEntries = Interlocked.Read(ref _totalEntries);
+
+        var lastTicks = Interlocked.Exchange(ref _lastRateCheckTicks, nowTicks);
+        var lastEntries = Interlocked.Exchange(ref _lastEntriesCount, currentEntries);
+
+        var elapsedSeconds = TimeSpan.FromTicks(nowTicks - lastTicks).TotalSeconds;
+        if (elapsedSeconds <= 0) return 0.0;
+
+        var delta = currentEntries - lastEntries;
+        return delta <= 0 ? 0.0 : delta / elapsedSeconds;
+    }
 }

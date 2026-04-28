@@ -22,6 +22,10 @@ public sealed class IngestBackgroundService : BackgroundService
     private readonly IngestOptions _opts;
     private readonly ILogger<IngestBackgroundService> _logger;
 
+    // Force-flush support for /admin/flush endpoint
+    private volatile TaskCompletionSource<int>? _flushCompletion;
+    private readonly SemaphoreSlim _forceFlushSignal = new(0, 1);
+
     public IngestBackgroundService(
         IngestBuffer buffer,
         LogEntryCopyWriter writer,
@@ -48,6 +52,14 @@ public sealed class IngestBackgroundService : BackgroundService
         {
             try
             {
+                // Check if a force-flush was requested (non-blocking)
+                if (_forceFlushSignal.CurrentCount > 0)
+                {
+                    _forceFlushSignal.Wait(0); // consume the signal
+                    await DrainAndSignalForceFlushAsync(batch, ct);
+                    continue;
+                }
+
                 // Wait for at least one item to arrive
                 if (!await _buffer.WaitToReadAsync(ct)) break;
 
@@ -58,12 +70,19 @@ public sealed class IngestBackgroundService : BackgroundService
                 if (batch.Count >= _opts.BatchMaxSize)
                 {
                     await FlushBatchAsync(batch, ct);
+                    // Check if force-flush is waiting after this flush
+                    if (_flushCompletion is not null)
+                        await DrainAndSignalForceFlushAsync(batch, ct);
                     continue;
                 }
 
                 // Adaptive window: keep collecting until idle OR cap OR full
                 await CollectBatchAdaptiveAsync(batch, ct);
                 await FlushBatchAsync(batch, ct);
+
+                // Check if force-flush is waiting after this flush
+                if (_flushCompletion is not null)
+                    await DrainAndSignalForceFlushAsync(batch, ct);
             }
             catch (OperationCanceledException) { break; }
             catch (Exception ex)
@@ -71,6 +90,59 @@ public sealed class IngestBackgroundService : BackgroundService
                 _logger.LogError(ex, "[HiveLog] IngestBackgroundService flush error");
                 await Task.Delay(500, ct).ConfigureAwait(false);
             }
+        }
+    }
+
+    /// <summary>
+    /// Drains the remaining buffer and signals a pending ForceFlushAsync caller.
+    /// </summary>
+    private async Task DrainAndSignalForceFlushAsync(List<LogEntry> batch, CancellationToken ct)
+    {
+        int totalFlushed = 0;
+
+        // Drain everything remaining in the buffer
+        batch.Clear();
+        while (_buffer.DrainTo(batch, _opts.BatchMaxSize) > 0)
+        {
+            totalFlushed += batch.Count;
+            await FlushBatchAsync(batch, ct);
+            batch.Clear();
+        }
+
+        // Signal the waiting caller
+        var completion = Interlocked.Exchange(ref _flushCompletion, null);
+        completion?.TrySetResult(totalFlushed);
+    }
+
+    /// <summary>
+    /// Triggers an immediate buffer flush and waits until it completes (up to timeout).
+    /// Returns number of entries flushed, or -1 on timeout.
+    /// </summary>
+    public async Task<int> ForceFlushAsync(TimeSpan timeout)
+    {
+        var tcs = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        // Only one force-flush at a time — if one is already pending, just wait for it
+        if (Interlocked.CompareExchange(ref _flushCompletion, tcs, null) != null)
+        {
+            await Task.Delay(timeout);
+            return 0;
+        }
+
+        // Signal the background loop to flush immediately
+        _forceFlushSignal.Release();
+
+        using var cts = new CancellationTokenSource(timeout);
+        try
+        {
+            return await tcs.Task.WaitAsync(cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            // Timeout — clear the pending TCS
+            Interlocked.CompareExchange(ref _flushCompletion, null, tcs);
+            tcs.TrySetCanceled();
+            return -1;
         }
     }
 

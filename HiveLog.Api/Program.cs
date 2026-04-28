@@ -1,4 +1,5 @@
 using System.Text.Json;
+using HiveLog.Api.Features.Admin;
 using HiveLog.Api.Features.Aggregate;
 using HiveLog.Api.Features.Ingest;
 using HiveLog.Api.Features.Retention;
@@ -54,7 +55,10 @@ public class Program
         builder.Services.AddSingleton(copyDataSourceBuilder.Build());
         builder.Services.AddSingleton<LogEntryCopyWriter>();
 
-        builder.Services.AddHostedService<IngestBackgroundService>();
+        // Register as singleton so AdminController can inject it directly,
+        // then add as hosted service pointing to the same singleton instance.
+        builder.Services.AddSingleton<IngestBackgroundService>();
+        builder.Services.AddHostedService(sp => sp.GetRequiredService<IngestBackgroundService>());
 
         // ---------------------------------------------------------------------------
         // Retention + Compression
@@ -64,6 +68,14 @@ public class Program
 
         builder.Services.AddHostedService<TimescalePolicyInitializer>();
         builder.Services.AddHostedService<RetentionCleanupJob>();
+
+        // ---------------------------------------------------------------------------
+        // Admin Endpoints
+        // ---------------------------------------------------------------------------
+        builder.Services.Configure<AdminOptions>(
+            builder.Configuration.GetSection(AdminOptions.SectionName));
+        builder.Services.AddSingleton<AdminApiKeyFilter>();
+        builder.Services.AddSingleton<RuntimeRetentionService>();
 
         // ---------------------------------------------------------------------------
         // Continuous Aggregates
