@@ -1,3 +1,4 @@
+using HiveLog.Api.Features.Aggregate;
 using HiveLog.Api.Features.Ingest;
 using HiveLog.Api.Features.Retention;
 using HiveLog.Api.Features.Stream;
@@ -58,6 +59,11 @@ public class Program
 
         builder.Services.AddHostedService<TimescalePolicyInitializer>();
         builder.Services.AddHostedService<RetentionCleanupJob>();
+
+        // ---------------------------------------------------------------------------
+        // Continuous Aggregates
+        // ---------------------------------------------------------------------------
+        builder.Services.AddHostedService<ContinuousAggregateInitializer>();
 
         // ---------------------------------------------------------------------------
         // Health Checks
