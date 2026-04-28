@@ -34,9 +34,12 @@ public sealed class ContinuousAggregateInitializer : IHostedService
                     RETURN;
                 END IF;
 
-                -- Create continuous aggregate view only if it does not exist yet
+                -- Create continuous aggregate view only if it does not exist yet.
+                -- TimescaleDB continuous aggregates are NOT in pg_matviews — must query
+                -- timescaledb_information.continuous_aggregates instead.
                 IF NOT EXISTS (
-                    SELECT 1 FROM pg_matviews WHERE matviewname = 'log_summary_5min'
+                    SELECT 1 FROM timescaledb_information.continuous_aggregates
+                    WHERE view_name = 'log_summary_5min'
                 ) THEN
                     EXECUTE $sql$
                         CREATE MATERIALIZED VIEW log_summary_5min

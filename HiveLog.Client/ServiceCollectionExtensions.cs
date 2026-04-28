@@ -40,6 +40,10 @@ public static class ServiceCollectionExtensions
             client.Timeout = TimeSpan.FromSeconds(10);
         });
 
+        // Prevent feedback loop: suppress the HiveLog HTTP client's own logs from being forwarded to HiveLog
+        builder.AddFilter<HiveLogProvider>("System.Net.Http.HttpClient.hivelog", LogLevel.None);
+        builder.AddFilter<HiveLogProvider>("HiveLog.Client", LogLevel.None);
+
         // ILoggerProvider — register as both concrete and interface so the logging infrastructure picks it up
         builder.Services.AddSingleton<HiveLogProvider>();
         builder.Services.AddSingleton<ILoggerProvider>(sp => sp.GetRequiredService<HiveLogProvider>());
