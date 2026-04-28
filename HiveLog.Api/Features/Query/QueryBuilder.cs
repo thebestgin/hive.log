@@ -178,6 +178,76 @@ public static class QueryBuilder
     }
 
     /// <summary>
+    /// Builds a parameterized COUNT(*) query from a QueryRequest.
+    /// Only allowed tables: log_entries, log_summary_5min.
+    /// Security: all values are NpgsqlParameters — no string interpolation of user input.
+    /// </summary>
+    public static (string Sql, NpgsqlParameter[] Parameters) BuildCount(QueryRequest request)
+    {
+        var sql = new StringBuilder();
+        var parameters = new List<NpgsqlParameter>();
+        int paramIndex = 0;
+
+        sql.AppendLine($"SELECT count(*) FROM {AllowedTable}");
+        sql.AppendLine("WHERE 1=1");
+
+        // --- Sources ---
+        if (request.Sources is { Length: > 0 })
+        {
+            var p = new NpgsqlParameter($"@p{paramIndex++}", NpgsqlDbType.Array | NpgsqlDbType.Text)
+            {
+                Value = request.Sources
+            };
+            parameters.Add(p);
+            sql.AppendLine($"  AND source = ANY({p.ParameterName})");
+        }
+
+        // --- Level ---
+        if (request.Levels?.Min is { } minLevel)
+        {
+            var p = new NpgsqlParameter($"@p{paramIndex++}", NpgsqlDbType.Smallint) { Value = minLevel };
+            parameters.Add(p);
+            sql.AppendLine($"  AND level >= {p.ParameterName}");
+        }
+
+        // --- Time Range ---
+        if (request.TimeRange?.From is { } from)
+        {
+            var p = new NpgsqlParameter($"@p{paramIndex++}", NpgsqlDbType.TimestampTz) { Value = from };
+            parameters.Add(p);
+            sql.AppendLine($"  AND timestamp >= {p.ParameterName}");
+        }
+
+        if (request.TimeRange?.To is { } to)
+        {
+            var p = new NpgsqlParameter($"@p{paramIndex++}", NpgsqlDbType.TimestampTz) { Value = to };
+            parameters.Add(p);
+            sql.AppendLine($"  AND timestamp <= {p.ParameterName}");
+        }
+
+        // --- TraceId ---
+        if (request.TraceId is { } traceId)
+        {
+            var p = new NpgsqlParameter($"@p{paramIndex++}", NpgsqlDbType.Uuid) { Value = traceId };
+            parameters.Add(p);
+            sql.AppendLine($"  AND trace_id = {p.ParameterName}");
+        }
+
+        // --- Search ---
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            var p = new NpgsqlParameter($"@p{paramIndex++}", NpgsqlDbType.Text)
+            {
+                Value = $"%{request.Search}%"
+            };
+            parameters.Add(p);
+            sql.AppendLine($"  AND message ILIKE {p.ParameterName}");
+        }
+
+        return (sql.ToString(), parameters.ToArray());
+    }
+
+    /// <summary>
     /// Builds the next cursor string from the last entry in the result set.
     /// Format: "{ISO8601-timestamp}|{uuid}"
     /// </summary>

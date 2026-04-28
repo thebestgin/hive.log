@@ -1,6 +1,8 @@
 using HiveLog.Api.Features.Query.Models;
+using HiveLog.Api.Features.Query.NaturalLanguage;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
+using NpgsqlTypes;
 
 namespace HiveLog.Api.Features.Query;
 
@@ -68,6 +70,116 @@ public class QueryController : ControllerBase
             Entries = entries,
             NextCursor = nextCursor
         });
+    }
+
+    /// <summary>
+    /// Natural language query for log entries.
+    /// Translates a plain-text question into a parameterized SQL query via a regex-based
+    /// template matcher. Covers ~70-80% of common agent queries without AI.
+    ///
+    /// Security: runs in a read-only transaction. Only log_entries and log_summary_5min
+    /// are allowed tables. All values are NpgsqlParameters — no string interpolation of input.
+    ///
+    /// When no pattern matches: returns 200 with confidence=0 and error="no_match" (no 500).
+    /// </summary>
+    [HttpPost("query/natural")]
+    [ProducesResponseType<NaturalQueryResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> QueryNatural([FromBody] NaturalQueryRequest request, CancellationToken ct)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        if (string.IsNullOrWhiteSpace(request.Query))
+            return BadRequest(new { error = "query must not be empty" });
+
+        var parsed = TemplateQueryParser.TryParse(request.Query);
+        if (parsed is null)
+        {
+            return Ok(new NaturalQueryResponse
+            {
+                Confidence = 0,
+                Error = "no_match"
+            });
+        }
+
+        string sql;
+        NpgsqlParameter[] parameters;
+        try
+        {
+            if (parsed.Kind == TemplateQueryParser.QueryKind.Count)
+                (sql, parameters) = QueryBuilder.BuildCount(parsed.Request);
+            else
+                (sql, parameters) = QueryBuilder.Build(parsed.Request);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+
+        await using var conn = await _dataSource.OpenConnectionAsync(ct);
+
+        // Read-only transaction — security guard: generated SQL must not write data
+        await using var tx = await conn.BeginTransactionAsync(
+            System.Data.IsolationLevel.ReadCommitted, ct);
+        await using var setReadOnly = new NpgsqlCommand("SET TRANSACTION READ ONLY", conn, tx);
+        await setReadOnly.ExecuteNonQueryAsync(ct);
+
+        try
+        {
+            if (parsed.Kind == TemplateQueryParser.QueryKind.Count)
+            {
+                await using var cmd = new NpgsqlCommand(sql, conn, tx);
+                cmd.Parameters.AddRange(parameters);
+                var scalar = await cmd.ExecuteScalarAsync(ct);
+                var count = Convert.ToInt64(scalar ?? 0L);
+
+                await tx.RollbackAsync(ct);
+                return Ok(new NaturalQueryResponse
+                {
+                    InterpretedQuery = parsed.Request,
+                    Sql = sql,
+                    Count = count,
+                    Confidence = parsed.Confidence
+                });
+            }
+            else
+            {
+                var effectiveLimit = Math.Clamp(parsed.Request.Limit, 1, 1000);
+                var entries = new List<LogEntryResult>();
+
+                await using var cmd = new NpgsqlCommand(sql, conn, tx);
+                cmd.Parameters.AddRange(parameters);
+
+                await using var reader = await cmd.ExecuteReaderAsync(ct);
+                while (await reader.ReadAsync(ct))
+                {
+                    entries.Add(MapRow(reader));
+                }
+
+                string? nextCursor = null;
+                if (entries.Count > effectiveLimit)
+                {
+                    entries.RemoveAt(entries.Count - 1);
+                    var last = entries[^1];
+                    nextCursor = QueryBuilder.BuildCursor(last.Timestamp, last.Id);
+                }
+
+                await tx.RollbackAsync(ct);
+                return Ok(new NaturalQueryResponse
+                {
+                    InterpretedQuery = parsed.Request,
+                    Sql = sql,
+                    Result = new QueryResponse { Entries = entries, NextCursor = nextCursor },
+                    Confidence = parsed.Confidence
+                });
+            }
+        }
+        catch
+        {
+            await tx.RollbackAsync(ct);
+            throw;
+        }
     }
 
     private static LogEntryResult MapRow(NpgsqlDataReader reader) => new()
