@@ -141,6 +141,18 @@ public class Program
         builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
         // ---------------------------------------------------------------------------
+        // Authentication — optionales JWT Bearer
+        // ---------------------------------------------------------------------------
+        builder.Services.AddAuthentication()
+            .AddJwtBearer(options =>
+            {
+                options.Authority = builder.Configuration["JwtBearer:Authority"];
+                options.Audience = builder.Configuration["JwtBearer:Audience"];
+                options.RequireHttpsMetadata = false;
+            });
+        builder.Services.AddAuthorization();
+
+        // ---------------------------------------------------------------------------
         // Swagger
         // ---------------------------------------------------------------------------
         builder.Services.AddEndpointsApiExplorer();
@@ -183,6 +195,9 @@ public class Program
             c.SwaggerEndpoint("/swagger/v1/swagger.json", "hive.log — Core API");
             c.SwaggerEndpoint("/swagger/webapp/swagger.json", "WebApp Connector");
         });
+
+        app.UseAuthentication();
+        app.UseAuthorization();
 
         app.MapControllers();
 
