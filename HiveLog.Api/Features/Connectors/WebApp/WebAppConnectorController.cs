@@ -46,10 +46,20 @@ public class WebAppConnectorController : ControllerBase
         var sw = Stopwatch.StartNew();
         _metrics.RecordIngestRequest();
 
+        bool isAuthenticated = User.Identity?.IsAuthenticated == true;
+        Guid? serverUserId = null;
+        if (isAuthenticated)
+        {
+            var sub = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                      ?? User.FindFirst("sub")?.Value;
+            if (Guid.TryParse(sub, out var parsedUserId))
+                serverUserId = parsedUserId;
+        }
+
         int accepted = 0;
         foreach (var dto in request.Entries)
         {
-            var entry = MapToEntity(dto, request);
+            var entry = MapToEntity(dto, request, isAuthenticated, serverUserId);
 
             var written = await _buffer.TryWriteAsync(entry, _opts.WriteTimeout, ct);
             if (!written)
@@ -79,7 +89,7 @@ public class WebAppConnectorController : ControllerBase
         return Accepted(new IngestResponse { Accepted = accepted });
     }
 
-    private static LogEntry MapToEntity(LogEntryDto dto, WebAppLogRequest request) => new()
+    private static LogEntry MapToEntity(LogEntryDto dto, WebAppLogRequest request, bool isAuthenticated, Guid? serverUserId) => new()
     {
         Timestamp = dto.Timestamp,
         Id = dto.Id ?? Guid.NewGuid(),
@@ -95,11 +105,11 @@ public class WebAppConnectorController : ControllerBase
         MessageTemplate = dto.MessageTemplate,
         Properties = dto.Properties,
         Exception = dto.Exception,
-        UserId = dto.UserId,
+        UserId = isAuthenticated ? serverUserId : dto.UserId,
         RequestId = dto.RequestId,
         SessionId = dto.SessionId,
         Tags = dto.Tags,
         Stream = dto.Stream,
-        IsAuthenticated = dto.UserId.HasValue,
+        IsAuthenticated = isAuthenticated,
     };
 }
