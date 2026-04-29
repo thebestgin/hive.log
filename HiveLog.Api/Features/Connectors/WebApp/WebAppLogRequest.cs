@@ -8,6 +8,6 @@ public class WebAppLogRequest
     [StringLength(128)]
     public string? InstanceId { get; set; }
 
-    [Required, MinLength(1), MaxLength(1000)]
+    [Required, MinLength(1), MaxLength(100)]
     public List<LogEntryDto> Entries { get; set; } = null!;
 }
