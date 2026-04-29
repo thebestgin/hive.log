@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="HiveLog.Api/HiveLog.Api.csproj" />
+  <Project Path="HiveLog.Client/HiveLog.Client.csproj" />
+</Solution>

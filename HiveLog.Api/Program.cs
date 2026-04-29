@@ -11,7 +11,9 @@ using HiveLog.Api.Persistence;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.OpenApi.Models;
 using Npgsql;
+using Swashbuckle.AspNetCore.Swagger;
 
 namespace HiveLog.Api;
 
@@ -144,11 +146,18 @@ public class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(c =>
         {
-            c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+            c.SwaggerDoc("v1", new OpenApiInfo { Title = "hive.log — Core API", Version = "v1" });
+            c.SwaggerDoc("webapp", new OpenApiInfo
             {
-                Title = "hive.log",
-                Version = "v1"
+                Title = "hive.log — WebApp Connector",
+                Version = "v1",
+                Description = "Frontend log ingest. No API key required."
             });
+            c.DocInclusionPredicate((docName, api) =>
+                docName == "v1"
+                    ? api.GroupName != "webapp"
+                    : api.GroupName == docName);
+            c.CustomSchemaIds(type => type.FullName);
         });
 
         // ---------------------------------------------------------------------------
@@ -168,13 +177,18 @@ public class Program
         // ---------------------------------------------------------------------------
         // Middleware
         // ---------------------------------------------------------------------------
-        if (app.Environment.IsDevelopment())
+        app.UseSwagger();
+        app.UseSwaggerUI(c =>
         {
-            app.UseSwagger();
-            app.UseSwaggerUI();
-        }
+            c.SwaggerEndpoint("/swagger/v1/swagger.json", "hive.log — Core API");
+            c.SwaggerEndpoint("/swagger/webapp/swagger.json", "WebApp Connector");
+        });
 
         app.MapControllers();
+
+        // Save swagger.json files for tooling / client generation
+        SaveSwaggerJson(app.Services, "v1", "OpenApi/swagger.json");
+        SaveSwaggerJson(app.Services, "webapp", "OpenApi/swagger.webapp.json");
 
         // Health endpoint returns JSON body including bufferDepth + droppedTotal
         app.MapHealthChecks("/health", new HealthCheckOptions
@@ -183,6 +197,21 @@ public class Program
         });
 
         app.Run();
+    }
+
+    private static void SaveSwaggerJson(IServiceProvider services, string docName, string outputPath)
+    {
+        var sw = services.GetRequiredService<ISwaggerProvider>();
+        var doc = sw.GetSwagger(docName);
+        using var ms = new System.IO.MemoryStream();
+        using var writer = new System.IO.StreamWriter(ms, leaveOpen: true);
+        var jsonWriter = new Microsoft.OpenApi.Writers.OpenApiJsonWriter(writer);
+        doc.SerializeAsV3(jsonWriter);
+        writer.Flush();
+        ms.Position = 0;
+        var json = new System.IO.StreamReader(ms).ReadToEnd();
+        Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+        File.WriteAllText(outputPath, json);
     }
 
     private static async Task WriteHealthResponse(HttpContext context, HealthReport report)
