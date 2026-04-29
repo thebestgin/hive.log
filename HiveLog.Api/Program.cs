@@ -10,7 +10,6 @@ using HiveLog.Api.Health;
 using HiveLog.Api.Persistence;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
-using HiveLog.Api.Identity;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.OpenApi;
 using Npgsql;
@@ -144,11 +143,6 @@ public class Program
         builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
         // ---------------------------------------------------------------------------
-        // Authentication — optionales JWT Bearer (WebApp Connector setzt UserId server-seitig)
-        // ---------------------------------------------------------------------------
-        IdentityExtensions.AddKeycloakAuthentication(builder);
-
-        // ---------------------------------------------------------------------------
         // Swagger
         // ---------------------------------------------------------------------------
         builder.Services.AddEndpointsApiExplorer();
@@ -191,9 +185,6 @@ public class Program
             c.SwaggerEndpoint("/swagger/v1/swagger.json", "hive.log — Core API");
             c.SwaggerEndpoint("/swagger/webapp/swagger.json", "WebApp Connector");
         });
-
-        app.UseAuthentication();
-        app.UseAuthorization();
 
         app.MapControllers();
 
