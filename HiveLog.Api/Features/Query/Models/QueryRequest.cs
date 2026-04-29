@@ -21,6 +21,12 @@ public class QueryRequest
     /// <summary>Exact trace ID match. Null = no trace filter.</summary>
     public string? TraceId { get; set; }
 
+    /// <summary>Exact span ID match — returns the single span with this ID. Null = no filter.</summary>
+    public string? SpanId { get; set; }
+
+    /// <summary>Exact parent span ID match — returns all direct children of this span. Null = no filter.</summary>
+    public string? ParentSpanId { get; set; }
+
     /// <summary>Tag filters. Null = no tag filter.</summary>
     public TagFilter? Tags { get; set; }
 

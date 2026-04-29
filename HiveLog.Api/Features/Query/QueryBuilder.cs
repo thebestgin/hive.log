@@ -22,7 +22,7 @@ public static class QueryBuilder
         var parameters = new List<NpgsqlParameter>();
         int paramIndex = 0;
 
-        sql.AppendLine($"SELECT timestamp, id, trace_id, span_id, source, source_type, instance_id,");
+        sql.AppendLine($"SELECT timestamp, id, trace_id, span_id, parent_span_id, source, source_type, instance_id,");
         sql.AppendLine($"       level, category, message, message_template, properties, exception,");
         sql.AppendLine($"       user_id, request_id, session_id, tags, stream");
         sql.AppendLine($"FROM {AllowedTable}");
@@ -94,6 +94,22 @@ public static class QueryBuilder
             var p = new NpgsqlParameter($"@p{paramIndex++}", NpgsqlDbType.Text) { Value = traceId };
             parameters.Add(p);
             sql.AppendLine($"  AND trace_id = {p.ParameterName}");
+        }
+
+        // --- SpanId ---
+        if (request.SpanId is { } spanId)
+        {
+            var p = new NpgsqlParameter($"@p{paramIndex++}", NpgsqlDbType.Text) { Value = spanId };
+            parameters.Add(p);
+            sql.AppendLine($"  AND span_id = {p.ParameterName}");
+        }
+
+        // --- ParentSpanId ---
+        if (request.ParentSpanId is { } parentSpanId)
+        {
+            var p = new NpgsqlParameter($"@p{paramIndex++}", NpgsqlDbType.Text) { Value = parentSpanId };
+            parameters.Add(p);
+            sql.AppendLine($"  AND parent_span_id = {p.ParameterName}");
         }
 
         // --- Tags ---
@@ -231,6 +247,22 @@ public static class QueryBuilder
             var p = new NpgsqlParameter($"@p{paramIndex++}", NpgsqlDbType.Text) { Value = traceId };
             parameters.Add(p);
             sql.AppendLine($"  AND trace_id = {p.ParameterName}");
+        }
+
+        // --- SpanId ---
+        if (request.SpanId is { } spanId)
+        {
+            var p = new NpgsqlParameter($"@p{paramIndex++}", NpgsqlDbType.Text) { Value = spanId };
+            parameters.Add(p);
+            sql.AppendLine($"  AND span_id = {p.ParameterName}");
+        }
+
+        // --- ParentSpanId ---
+        if (request.ParentSpanId is { } parentSpanId)
+        {
+            var p = new NpgsqlParameter($"@p{paramIndex++}", NpgsqlDbType.Text) { Value = parentSpanId };
+            parameters.Add(p);
+            sql.AppendLine($"  AND parent_span_id = {p.ParameterName}");
         }
 
         // --- Search ---

@@ -6,6 +6,7 @@ internal sealed class ClientLogEntry
     public DateTimeOffset Timestamp { get; set; }
     public string? TraceId { get; set; }
     public string? SpanId { get; set; }
+    public string? ParentSpanId { get; set; }
     public int Level { get; set; }
     public string Category { get; set; } = null!;
     public string Message { get; set; } = null!;

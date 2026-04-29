@@ -17,7 +17,7 @@ namespace HiveLog.Api.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.4")
+                .HasAnnotation("ProductVersion", "10.0.6")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -64,6 +64,10 @@ namespace HiveLog.Api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("message_template");
 
+                    b.Property<string>("ParentSpanId")
+                        .HasColumnType("text")
+                        .HasColumnName("parent_span_id");
+
                     b.Property<string>("Properties")
                         .HasColumnType("jsonb")
                         .HasColumnName("properties");
@@ -109,9 +113,13 @@ namespace HiveLog.Api.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("user_id");
 
-                    b.HasKey("Timestamp", "Id");
+                    b.HasKey("Timestamp", "Id")
+                        .HasName("pk_log_entries");
 
-                    b.ToTable("log_entries");
+                    b.HasIndex("TraceId", "ParentSpanId")
+                        .HasDatabaseName("ix_log_entries_trace_id_parent_span_id");
+
+                    b.ToTable("log_entries", (string)null);
                 });
 
             modelBuilder.Entity("HiveLog.Api.Features.Rules.Models.WebhookRule", b =>
@@ -176,9 +184,10 @@ namespace HiveLog.Api.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("window_start_at");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_webhook_rules");
 
-                    b.ToTable("webhook_rules");
+                    b.ToTable("webhook_rules", (string)null);
                 });
 #pragma warning restore 612, 618
         }

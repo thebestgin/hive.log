@@ -38,7 +38,8 @@ public class Program
         {
             // Npgsql 9.x: Kerberos/GSSAPI is not the default — no GssEncryptionMode needed.
             // If upgrading to Npgsql 10+, add: dataSourceBuilder.ConnectionStringBuilder.GssEncryptionMode = GssEncryptionMode.Disable;
-            options.UseNpgsql(connectionString);
+            options.UseNpgsql(connectionString)
+                   .UseSnakeCaseNamingConvention();
         });
 
 

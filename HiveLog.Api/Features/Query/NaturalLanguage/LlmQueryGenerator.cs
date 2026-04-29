@@ -206,7 +206,9 @@ public class LlmQueryGenerator
         sb.AppendLine("Tabelle: log_entries");
         sb.AppendLine("  timestamp       TIMESTAMPTZ  -- Zeitstempel des Log-Eintrags (UTC)");
         sb.AppendLine("  id              UUID         -- Eindeutige ID");
-        sb.AppendLine("  trace_id        UUID         -- Korrelations-ID über Service-Grenzen (nullable)");
+        sb.AppendLine("  trace_id        TEXT         -- W3C TraceId: gleich über alle Ebenen eines Requests (nullable)");
+        sb.AppendLine("  span_id         TEXT         -- W3C SpanId: eindeutig für diesen Verarbeitungsschritt (nullable)");
+        sb.AppendLine("  parent_span_id  TEXT         -- W3C ParentSpanId: SpanId des aufrufenden Schritts (nullable, null=Root)");
         sb.AppendLine("  source          TEXT         -- Service-Name, z.B. 'talents-api', 'connect-app'");
         sb.AppendLine("  level           SMALLINT     -- 0=Trace, 1=Debug, 2=Info, 3=Warn, 4=Error, 5=Fatal");
         sb.AppendLine("  category        TEXT         -- Logger-Name / Komponenten-Name");

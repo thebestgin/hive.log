@@ -96,6 +96,7 @@ public class WebAppConnectorController : ControllerBase
         Id = dto.Id ?? Guid.NewGuid(),
         TraceId = dto.TraceId,
         SpanId = dto.SpanId,
+        ParentSpanId = dto.ParentSpanId,
         Source = Source,
         SourceType = SourceType,
         InstanceId = request.InstanceId,

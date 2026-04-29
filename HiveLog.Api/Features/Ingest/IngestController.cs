@@ -85,6 +85,7 @@ public class IngestController : ControllerBase
         Id = dto.Id ?? Guid.NewGuid(),
         TraceId = dto.TraceId,
         SpanId = dto.SpanId,
+        ParentSpanId = dto.ParentSpanId,
         Source = request.Source,
         SourceType = request.SourceType,
         InstanceId = request.InstanceId,

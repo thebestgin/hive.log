@@ -16,6 +16,9 @@ public class LogEntryDto
     [StringLength(64)]
     public string? SpanId { get; set; }
 
+    [StringLength(64)]
+    public string? ParentSpanId { get; set; }
+
     [Required, Range(0, 5)]
     public short Level { get; set; }
 

@@ -12,7 +12,10 @@ public class HiveLogDbContextFactory : IDesignTimeDbContextFactory<HiveLogDbCont
     public HiveLogDbContext CreateDbContext(string[] args)
     {
         var optionsBuilder = new DbContextOptionsBuilder<HiveLogDbContext>();
-        optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=hivelog_design;Username=jobdate;Password=jobdate123");
+        // Design-time only — no real DB connection needed for migration generation
+        optionsBuilder
+            .UseNpgsql("Host=localhost;Database=__design_time_placeholder__")
+            .UseSnakeCaseNamingConvention();
         return new HiveLogDbContext(optionsBuilder.Options);
     }
 }

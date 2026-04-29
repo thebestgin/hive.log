@@ -32,10 +32,11 @@ public sealed class HiveLogEntryBuilder
         return this;
     }
 
-    public HiveLogEntryBuilder WithTrace(string? traceId, string? spanId = null)
+    public HiveLogEntryBuilder WithTrace(string? traceId, string? spanId = null, string? parentSpanId = null)
     {
         Entry.TraceId = traceId;
         Entry.SpanId = spanId;
+        Entry.ParentSpanId = parentSpanId;
         return this;
     }
 
