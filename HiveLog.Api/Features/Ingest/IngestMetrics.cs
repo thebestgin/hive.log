@@ -26,6 +26,7 @@ public sealed class IngestMetrics
     private long _totalEntries;
     private long _lastRateCheckTicks;
     private long _lastEntriesCount;
+    private long _lastFlushAtTicks;
 
     public IngestMetrics(IMeterFactory meterFactory, IngestBuffer buffer)
     {
@@ -88,7 +89,21 @@ public sealed class IngestMetrics
     }
 
     /// <summary>Record entries successfully flushed to the database.</summary>
-    public void RecordFlushed(int count) => _flushedTotal.Add(count);
+    public void RecordFlushed(int count)
+    {
+        _flushedTotal.Add(count);
+        Interlocked.Exchange(ref _lastFlushAtTicks, DateTimeOffset.UtcNow.Ticks);
+    }
+
+    /// <summary>UTC timestamp of the last successful DB flush. Null if no flush has occurred yet.</summary>
+    public DateTimeOffset? LastFlushAt
+    {
+        get
+        {
+            var ticks = Interlocked.Read(ref _lastFlushAtTicks);
+            return ticks == 0 ? null : new DateTimeOffset(ticks, TimeSpan.Zero);
+        }
+    }
 
     public void RecordQueryLatency(double ms) => _queryLatencyMs.Record(ms);
 

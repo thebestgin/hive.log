@@ -10,10 +10,12 @@ using HiveLog.Api.Health;
 using HiveLog.Api.Persistence;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
+using HiveLog.Api.Identity;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Npgsql;
 using Swashbuckle.AspNetCore.Swagger;
+using OpenApiInfo = Microsoft.OpenApi.OpenApiInfo;
 
 namespace HiveLog.Api;
 
@@ -141,16 +143,9 @@ public class Program
         builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
         // ---------------------------------------------------------------------------
-        // Authentication — optionales JWT Bearer
+        // Authentication — optionales JWT Bearer (WebApp Connector setzt UserId server-seitig)
         // ---------------------------------------------------------------------------
-        builder.Services.AddAuthentication()
-            .AddJwtBearer(options =>
-            {
-                options.Authority = builder.Configuration["JwtBearer:Authority"];
-                options.Audience = builder.Configuration["JwtBearer:Audience"];
-                options.RequireHttpsMetadata = false;
-            });
-        builder.Services.AddAuthorization();
+        IdentityExtensions.AddKeycloakAuthentication(builder);
 
         // ---------------------------------------------------------------------------
         // Swagger
@@ -219,10 +214,7 @@ public class Program
         var sw = services.GetRequiredService<ISwaggerProvider>();
         var doc = sw.GetSwagger(docName);
         using var ms = new System.IO.MemoryStream();
-        using var writer = new System.IO.StreamWriter(ms, leaveOpen: true);
-        var jsonWriter = new Microsoft.OpenApi.Writers.OpenApiJsonWriter(writer);
-        doc.SerializeAsV3(jsonWriter);
-        writer.Flush();
+        doc.SerializeAsJsonAsync(ms, OpenApiSpecVersion.OpenApi3_0).GetAwaiter().GetResult();
         ms.Position = 0;
         var json = new System.IO.StreamReader(ms).ReadToEnd();
         Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
@@ -243,6 +235,9 @@ public class Program
         // Extract HiveLog-specific data from the custom health check
         int bufferDepth = 0;
         long droppedTotal = 0;
+        int subscriberCount = 0;
+        string lastFlushAt = "never";
+        bool workerAlive = true;
 
         if (report.Entries.TryGetValue("hivelog", out var hiveEntry) && hiveEntry.Data is not null)
         {
@@ -250,6 +245,12 @@ public class Program
                 bufferDepth = bd is int i ? i : 0;
             if (hiveEntry.Data.TryGetValue("droppedTotal", out var dt))
                 droppedTotal = dt is long l ? l : 0;
+            if (hiveEntry.Data.TryGetValue("subscriberCount", out var sc))
+                subscriberCount = sc is int si ? si : 0;
+            if (hiveEntry.Data.TryGetValue("lastFlushAt", out var lf))
+                lastFlushAt = lf as string ?? "never";
+            if (hiveEntry.Data.TryGetValue("workerAlive", out var wa))
+                workerAlive = wa is bool b && b;
         }
 
         var response = new
@@ -257,6 +258,9 @@ public class Program
             status,
             bufferDepth,
             droppedTotal,
+            subscriberCount,
+            lastFlushAt,
+            workerAlive,
         };
 
         await context.Response.WriteAsync(JsonSerializer.Serialize(response,
