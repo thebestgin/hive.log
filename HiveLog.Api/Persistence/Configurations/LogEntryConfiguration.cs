@@ -4,6 +4,14 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace HiveLog.Api.Persistence.Configurations;
 
+// WARNING: Raw SQL dependency — LogEntryCopyWriter
+// LogEntryCopyWriter (Features/Ingest/LogEntryCopyWriter.cs) writes log_entries via
+// Npgsql COPY. It reads table/column names from EF metadata, but the Write calls in
+// WriteBatchAsync must be kept in the exact same order as the columns listed here.
+// Adding a property to LogEntry requires TWO changes in LogEntryCopyWriter:
+//   1. Add Col(...) to BuildCopyCommand
+//   2. Add WriteAsync/WriteNullableAsync to WriteBatchAsync (same position)
+// Missing either causes a column offset — data lands in the wrong columns silently.
 public class LogEntryConfiguration : IEntityTypeConfiguration<LogEntry>
 {
     public void Configure(EntityTypeBuilder<LogEntry> builder)

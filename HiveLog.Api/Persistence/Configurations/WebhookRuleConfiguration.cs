@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace HiveLog.Api.Persistence.Configurations;
 
+// WebhookRule is written exclusively via EF Core — no Raw SQL, no COPY.
+// Changes here do not require manual synchronization with other files.
 public class WebhookRuleConfiguration : IEntityTypeConfiguration<WebhookRule>
 {
     public void Configure(EntityTypeBuilder<WebhookRule> builder)

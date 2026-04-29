@@ -32,11 +32,13 @@ public class Program
 
         // ---------------------------------------------------------------------------
         // Database
+        // WARNING: UseSnakeCaseNamingConvention() converts all EF property names to
+        // snake_case automatically. Raw SQL in LogEntryCopyWriter and QueryBuilder
+        // must use snake_case column names to match (e.g. parent_span_id, not ParentSpanId).
+        // See HiveLogDbContext.cs for the full list of raw SQL dependencies.
         // ---------------------------------------------------------------------------
         builder.Services.AddDbContext<HiveLogDbContext>(options =>
         {
-            // Npgsql 9.x: Kerberos/GSSAPI is not the default — no GssEncryptionMode needed.
-            // If upgrading to Npgsql 10+, add: dataSourceBuilder.ConnectionStringBuilder.GssEncryptionMode = GssEncryptionMode.Disable;
             options.UseNpgsql(connectionString)
                    .UseSnakeCaseNamingConvention();
         });
