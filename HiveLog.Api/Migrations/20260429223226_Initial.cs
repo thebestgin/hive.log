@@ -69,6 +69,19 @@ namespace HiveLog.Api.Migrations
                 name: "ix_log_entries_trace_id_parent_span_id",
                 table: "log_entries",
                 columns: new[] { "trace_id", "parent_span_id" });
+
+            // Convert log_entries to a TimescaleDB hypertable (idempotent: no-op if extension missing)
+            migrationBuilder.Sql("""
+                DO $$
+                BEGIN
+                    IF EXISTS (
+                        SELECT 1 FROM pg_available_extensions WHERE name = 'timescaledb'
+                    ) THEN
+                        PERFORM create_hypertable('log_entries', 'timestamp', if_not_exists => true);
+                    END IF;
+                END;
+                $$;
+                """);
         }
 
         /// <inheritdoc />
