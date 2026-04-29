@@ -46,21 +46,10 @@ public class WebAppConnectorController : ControllerBase
         var sw = Stopwatch.StartNew();
         _metrics.RecordIngestRequest();
 
-        // Optionale JWT-Authentifizierung: wenn gültiges Token vorhanden, UserId server-seitig setzen
-        bool isAuthenticated = User.Identity?.IsAuthenticated == true;
-        Guid? serverUserId = null;
-        if (isAuthenticated)
-        {
-            var sub = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-                      ?? User.FindFirst("sub")?.Value;
-            if (Guid.TryParse(sub, out var parsedUserId))
-                serverUserId = parsedUserId;
-        }
-
         int accepted = 0;
         foreach (var dto in request.Entries)
         {
-            var entry = MapToEntity(dto, request, isAuthenticated, serverUserId);
+            var entry = MapToEntity(dto, request);
 
             var written = await _buffer.TryWriteAsync(entry, _opts.WriteTimeout, ct);
             if (!written)
@@ -90,7 +79,7 @@ public class WebAppConnectorController : ControllerBase
         return Accepted(new IngestResponse { Accepted = accepted });
     }
 
-    private static LogEntry MapToEntity(LogEntryDto dto, WebAppLogRequest request, bool isAuthenticated, Guid? serverUserId) => new()
+    private static LogEntry MapToEntity(LogEntryDto dto, WebAppLogRequest request) => new()
     {
         Timestamp = dto.Timestamp,
         Id = dto.Id ?? Guid.NewGuid(),
@@ -106,11 +95,11 @@ public class WebAppConnectorController : ControllerBase
         MessageTemplate = dto.MessageTemplate,
         Properties = dto.Properties,
         Exception = dto.Exception,
-        UserId = isAuthenticated ? serverUserId : dto.UserId,
+        UserId = dto.UserId,
         RequestId = dto.RequestId,
         SessionId = dto.SessionId,
         Tags = dto.Tags,
         Stream = dto.Stream,
-        IsAuthenticated = isAuthenticated,
+        IsAuthenticated = dto.UserId.HasValue,
     };
 }
