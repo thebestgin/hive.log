@@ -46,6 +46,9 @@ public class WebAppConnectorController : ControllerBase
         var sw = Stopwatch.StartNew();
         _metrics.RecordIngestRequest();
 
+        // SECURITY: IsAuthenticated and UserId MUST come from the validated JWT (Keycloak access token).
+        // Never trust userId from the request body — the frontend could send any value.
+        // If no valid token is present, IsAuthenticated=false and UserId is null (anonymous entry).
         bool isAuthenticated = User.Identity?.IsAuthenticated == true;
         Guid? serverUserId = null;
         if (isAuthenticated)
