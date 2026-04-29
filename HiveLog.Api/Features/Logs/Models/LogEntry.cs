@@ -79,4 +79,10 @@ public class LogEntry
 
     [Column("stream")]
     public string Stream { get; set; } = "app";
+
+    // --- Auth ---
+
+    /// <summary>True when the ingest request carried a valid JWT Bearer token.</summary>
+    [Column("is_authenticated")]
+    public bool IsAuthenticated { get; set; }
 }
