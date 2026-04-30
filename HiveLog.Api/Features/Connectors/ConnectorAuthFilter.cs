@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using HiveLog.Api.Features.Connectors.Manifest;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -44,16 +45,19 @@ public sealed class ConnectorAuthFilter : IAsyncActionFilter
             case "apikey":
             {
                 var headerName = connector.Auth.HeaderName ?? "X-Api-Key";
-                if (!context.HttpContext.Request.Headers.TryGetValue(headerName, out var keyValue) ||
-                    string.IsNullOrEmpty(keyValue))
+                var keyValue = context.HttpContext.Request.Headers[headerName].FirstOrDefault();
+                if (string.IsNullOrEmpty(keyValue))
                 {
                     context.Result = new UnauthorizedObjectResult(
                         new { error = $"Missing {headerName} header." });
                     return;
                 }
 
+                var keyBytes = System.Text.Encoding.UTF8.GetBytes(keyValue);
                 var matched = connector.Auth.ApiAccesses?
-                    .Any(a => a.ApiKey == keyValue.ToString()) ?? false;
+                    .Any(a => CryptographicOperations.FixedTimeEquals(
+                        System.Text.Encoding.UTF8.GetBytes(a.ApiKey),
+                        keyBytes)) ?? false;
 
                 if (!matched)
                 {
