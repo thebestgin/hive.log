@@ -50,6 +50,11 @@ public class WebAppConnectorController : ControllerBase
         // Never trust userId from the request body — the frontend could send any value.
         // If no valid token is present, IsAuthenticated=false and UserId is null (anonymous entry).
         bool isAuthenticated = User.Identity?.IsAuthenticated == true;
+        // DEBUG: keep — breakpoint target to verify isAuthenticated during local debugging
+        // if(isAuthenticated)
+        // {
+        //     bool test = true;
+        // }
         Guid? serverUserId = null;
         if (isAuthenticated)
         {
@@ -108,11 +113,11 @@ public class WebAppConnectorController : ControllerBase
         MessageTemplate = dto.MessageTemplate,
         Properties = dto.Properties,
         Exception = dto.Exception,
-        UserId = isAuthenticated ? serverUserId : dto.UserId,
+        UserId = isAuthenticated ? serverUserId : dto.UserId, // authenticated: server-verified from JWT; anonymous: client-supplied (not trusted)
         RequestId = dto.RequestId,
         SessionId = dto.SessionId,
         Tags = dto.Tags,
         Stream = dto.Stream,
-        IsAuthenticated = isAuthenticated,
+        IsAuthenticated = isAuthenticated, // MUST only be set via User.Identity.IsAuthenticated — never from request body
     };
 }

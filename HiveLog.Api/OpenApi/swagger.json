@@ -1,5 +1,5 @@
 {
-  "openapi": "3.0.1",
+  "openapi": "3.0.4",
   "info": {
     "title": "hive.log — Core API",
     "version": "v1"
@@ -861,6 +861,12 @@
             "type": "string",
             "nullable": true
           },
+          "parentSpanId": {
+            "maxLength": 64,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
           "level": {
             "maximum": 5,
             "minimum": 0,
@@ -1085,6 +1091,14 @@
             "$ref": "#/components/schemas/HiveLog.Api.Features.Query.Models.TimeRangeFilter"
           },
           "traceId": {
+            "type": "string",
+            "nullable": true
+          },
+          "spanId": {
+            "type": "string",
+            "nullable": true
+          },
+          "parentSpanId": {
             "type": "string",
             "nullable": true
           },
@@ -1377,5 +1391,25 @@
         "additionalProperties": { }
       }
     }
-  }
+  },
+  "tags": [
+    {
+      "name": "Admin"
+    },
+    {
+      "name": "Aggregate"
+    },
+    {
+      "name": "Ingest"
+    },
+    {
+      "name": "Query"
+    },
+    {
+      "name": "Rules"
+    },
+    {
+      "name": "Stream"
+    }
+  ]
 }

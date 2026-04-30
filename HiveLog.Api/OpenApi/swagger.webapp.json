@@ -1,5 +1,5 @@
 {
-  "openapi": "3.0.1",
+  "openapi": "3.0.4",
   "info": {
     "title": "hive.log — WebApp Connector",
     "description": "Frontend log ingest. No API key required.",
@@ -93,7 +93,7 @@
             "nullable": true
           },
           "entries": {
-            "maxItems": 1000,
+            "maxItems": 100,
             "minItems": 1,
             "type": "array",
             "items": {
@@ -138,6 +138,12 @@
             "nullable": true
           },
           "spanId": {
+            "maxLength": 64,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "parentSpanId": {
             "maxLength": 64,
             "minLength": 0,
             "type": "string",
@@ -239,5 +245,10 @@
         "additionalProperties": { }
       }
     }
-  }
+  },
+  "tags": [
+    {
+      "name": "WebAppConnector"
+    }
+  ]
 }
