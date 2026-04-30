@@ -62,24 +62,24 @@ Every response includes the interpreted query and generated SQL:
 
 The agent can inspect the SQL and correct if the interpretation is wrong.
 
-## LLM Options
+## LLM Configuration
 
-| Option | Local | Privacy | Quality | Recommendation |
-|---|---|---|---|---|
-| Template matcher (own code) | Yes | Perfect | High for known patterns | Stage 1 -- mandatory |
-| Ollama + SQLCoder (GGUF) | Yes | Perfect | Good (SQL-specialized) | Stage 2 Dev -- recommended |
-| Ollama + DeepSeek-Coder | Yes | Perfect | Good general | Alternative to SQLCoder |
-| vanna.ai (local mode) | Yes | Good | Very good with training | Evaluate later |
-| OpenAI GPT-4o | No (cloud) | Bad | Excellent | Dev only, never Prod |
-| Azure OpenAI (EU region) | Yes (EU) | Good (GDPR-configurable) | Excellent | Prod fallback if local insufficient |
+Stage 2 uses OpenAI Chat Completions. Config via `HiveLog:NlQuery` (see `.env-example`):
 
-**Critical:** Log data contains potentially personal data (user IDs, request paths with IDs, error details). NL-to-SQL must **never** send log contents to external services. Only schema + question.
+| Key | Default | Description |
+|---|---|---|
+| `Enabled` | `true` | Set to `false` to disable Stage 2 entirely (template matcher only) |
+| `ApiKey` | — | OpenAI API key (required, set via secrets) |
+| `Model` | `gpt-4.1` | Model name — gpt-4.1 is sufficient for this well-defined task |
+| `BaseUrl` | `https://api.openai.com` | Override for Azure OpenAI or other compatible endpoints |
+| `TimeoutSeconds` | `30` | Request timeout |
 
-## Rollout Plan
+**Privacy guarantee:** The LLM never sees log data. Only schema + question are sent.
+Log data contains potentially personal data (user IDs, request paths, error details) —
+sending it to external services is prohibited. The system prompt contains only table
+structure, column definitions, and few-shot examples.
 
-1. **MVP:** Template matcher only (no AI needed, immediately usable)
-2. **Phase 2:** Ollama + SQLCoder locally in the Dev Docker stack
-3. **Phase 3:** Azure OpenAI as optional production fallback (GDPR-compliant configuration)
+**Usage pattern:** Admin-only feature, ~3–4 calls/day. Cost is negligible.
 
 ## Confidence Score
 
