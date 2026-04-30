@@ -129,7 +129,8 @@ public class Program
         // ---------------------------------------------------------------------------
         builder.Services.AddHealthChecks()
             .AddNpgSql(connectionString, name: "database")
-            .AddCheck<HiveLogHealthCheck>("hivelog");
+            .AddCheck<HiveLogHealthCheck>("hivelog")
+            .AddCheck<OllamaHealthCheck>("ollama");
 
         // ---------------------------------------------------------------------------
         // Controllers + JSON
@@ -257,6 +258,11 @@ public class Program
                 workerAlive = wa is bool b && b;
         }
 
+        // Extract Ollama availability from the ollama health check
+        bool ollamaAvailable = true;
+        if (report.Entries.TryGetValue("ollama", out var ollamaEntry))
+            ollamaAvailable = ollamaEntry.Status == HealthStatus.Healthy;
+
         var response = new
         {
             status,
@@ -265,6 +271,7 @@ public class Program
             subscriberCount,
             lastFlushAt,
             workerAlive,
+            ollamaAvailable,
         };
 
         await context.Response.WriteAsync(JsonSerializer.Serialize(response,
