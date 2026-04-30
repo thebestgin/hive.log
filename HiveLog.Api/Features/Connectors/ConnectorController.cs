@@ -58,10 +58,9 @@ public class ConnectorController : ControllerBase
 
         var connector = (ConnectorDefinition)HttpContext.Items["Connector"]!;
 
-        // JWT connectors: UserId + IsAuthenticated come from the validated token (server-side).
-        // apiKey/none connectors: IsAuthenticated = false, UserId from request body (not trusted).
-        bool isJwtConnector = string.Equals(connector.Auth.Type, "jwt", StringComparison.OrdinalIgnoreCase);
-        bool isAuthenticated = isJwtConnector && User.Identity?.IsAuthenticated == true;
+        // If a valid JWT is present (regardless of connector auth type), use server-side UserId.
+        // This preserves the old WebAppConnector behavior: AllowAnonymous + optional JWT.
+        bool isAuthenticated = User.Identity?.IsAuthenticated == true;
         Guid? serverUserId = null;
 
         if (isAuthenticated)

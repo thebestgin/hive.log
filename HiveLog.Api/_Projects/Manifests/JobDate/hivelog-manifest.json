@@ -23,17 +23,8 @@
       }
     },
     {
-      "id": "webapp-jwt",
-      "name": "WebApp (authenticated)",
-      "source": "webapp",
-      "sourceType": "frontend",
-      "auth": {
-        "type": "jwt"
-      }
-    },
-    {
-      "id": "webapp-anonymous",
-      "name": "WebApp (anonymous)",
+      "id": "webapp",
+      "name": "WebApp",
       "source": "webapp",
       "sourceType": "frontend",
       "auth": {
