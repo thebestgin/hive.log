@@ -1,4 +1,4 @@
-using System.Net.Http.Json;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -7,7 +7,7 @@ using Microsoft.Extensions.Options;
 namespace HiveLog.Api.Features.Query.NaturalLanguage;
 
 /// <summary>
-/// Stufe 2 of the NL-to-SQL pipeline: sends the user question to a local Ollama instance
+/// Stufe 2 of the NL-to-SQL pipeline: sends the user question to OpenAI Chat Completions
 /// and receives a SQL SELECT query in return.
 ///
 /// Privacy guarantee: the prompt contains ONLY the database schema and few-shot examples —
@@ -17,7 +17,7 @@ namespace HiveLog.Api.Features.Query.NaturalLanguage;
 ///   1. Read-only check — no INSERT/UPDATE/DELETE/DROP/TRUNCATE/CREATE/ALTER
 ///   2. Whitelist table check — only log_entries and log_summary_5min are allowed
 ///
-/// When Ollama is unavailable or returns an unparseable response, returns null.
+/// When OpenAI is unavailable or the API key is not configured, returns null.
 /// The caller falls back to { error: "no_match", confidence: 0 }.
 /// </summary>
 public class LlmQueryGenerator
@@ -39,58 +39,75 @@ public class LlmQueryGenerator
         @"\bFROM\s+([\w.]+)|\bJOIN\s+([\w.]+)",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-    private readonly HttpClient _http;
+    private static readonly JsonSerializerOptions _json = new(JsonSerializerDefaults.Web);
+
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly NlQueryOptions _options;
     private readonly ILogger<LlmQueryGenerator> _logger;
 
     public LlmQueryGenerator(
-        HttpClient http,
+        IHttpClientFactory httpClientFactory,
         IOptions<NlQueryOptions> options,
         ILogger<LlmQueryGenerator> logger)
     {
-        _http = http;
+        _httpClientFactory = httpClientFactory;
         _options = options.Value;
         _logger = logger;
     }
 
     /// <summary>
-    /// Sends the user query to Ollama and returns validated SQL.
-    /// Returns null when Ollama is unavailable or the response cannot be parsed.
+    /// Sends the user query to OpenAI and returns validated SQL.
+    /// Returns null when the API key is not configured or the request fails.
     /// Throws <see cref="SqlValidationException"/> when the generated SQL fails security checks.
     /// </summary>
     public async Task<string?> GenerateAsync(string userQuery, CancellationToken ct)
     {
-        var prompt = $"{SystemPrompt}\n\nFrage: {userQuery}\nSQL:";
+        if (string.IsNullOrWhiteSpace(_options.ApiKey) || _options.ApiKey.StartsWith("<"))
+        {
+            _logger.LogWarning("OpenAI API key is not configured — NL-to-SQL LLM fallback disabled.");
+            return null;
+        }
 
-        var requestBody = new
+        var payload = new
         {
             model = _options.Model,
-            prompt,
-            stream = false
+            temperature = 0.0,
+            max_tokens = 500,
+            messages = new object[]
+            {
+                new { role = "system", content = SystemPrompt },
+                new { role = "user", content = userQuery }
+            }
         };
 
         try
         {
-            var response = await _http.PostAsJsonAsync(
-                "/api/generate",
-                requestBody,
-                cancellationToken: ct);
+            var http = _httpClientFactory.CreateClient("hivelog.nlquery");
+            http.BaseAddress = new Uri(_options.BaseUrl.TrimEnd('/') + "/");
+            http.Timeout = TimeSpan.FromSeconds(_options.TimeoutSeconds);
+            http.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", _options.ApiKey);
+
+            using var content = new StringContent(
+                JsonSerializer.Serialize(payload, _json), Encoding.UTF8, "application/json");
+
+            using var response = await http.PostAsync("v1/chat/completions", content, ct);
+            var body = await response.Content.ReadAsStringAsync(ct);
 
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning(
-                    "Ollama returned non-success status {Status} for model {Model}",
+                    "OpenAI returned non-success status {Status} for model {Model}",
                     (int)response.StatusCode, _options.Model);
                 return null;
             }
 
-            var body = await response.Content.ReadAsStringAsync(ct);
             var sql = ExtractSql(body);
 
             if (sql is null)
             {
                 _logger.LogWarning(
-                    "Ollama response did not contain a parseable SQL statement. Model: {Model}",
+                    "OpenAI response did not contain a parseable SQL statement. Model: {Model}",
                     _options.Model);
                 return null;
             }
@@ -106,13 +123,13 @@ public class LlmQueryGenerator
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or OperationCanceledException)
         {
             _logger.LogInformation(
-                "Ollama not available or request timed out ({ExType}). Falling back to no_match.",
+                "OpenAI not available or request timed out ({ExType}). Falling back to no_match.",
                 ex.GetType().Name);
             return null;
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Unexpected error calling Ollama. Falling back to no_match.");
+            _logger.LogWarning(ex, "Unexpected error calling OpenAI. Falling back to no_match.");
             return null;
         }
     }
@@ -122,37 +139,40 @@ public class LlmQueryGenerator
     // ──────────────────────────────────────────────────────────────────────────
 
     /// <summary>
-    /// Extracts the SQL statement from the Ollama JSON response.
-    /// Ollama returns {"response": "SELECT ...", ...} with stream: false.
+    /// Extracts the SQL statement from the OpenAI Chat Completions response.
+    /// OpenAI returns {"choices":[{"message":{"content":"SELECT ..."}}]}.
     /// </summary>
     private static string? ExtractSql(string jsonBody)
     {
         try
         {
             using var doc = JsonDocument.Parse(jsonBody);
-            if (!doc.RootElement.TryGetProperty("response", out var responseElement))
-                return null;
+            var content = doc.RootElement
+                .GetProperty("choices")[0]
+                .GetProperty("message")
+                .GetProperty("content")
+                .GetString()
+                ?.Trim();
 
-            var raw = responseElement.GetString()?.Trim();
-            if (string.IsNullOrWhiteSpace(raw))
+            if (string.IsNullOrWhiteSpace(content))
                 return null;
 
             // Strip markdown code fences (```sql ... ```)
-            if (raw.StartsWith("```", StringComparison.Ordinal))
+            if (content.StartsWith("```", StringComparison.Ordinal))
             {
-                var lines = raw.Split('\n');
+                var lines = content.Split('\n');
                 var sqlLines = lines
                     .Skip(1)
                     .TakeWhile(l => !l.TrimStart().StartsWith("```", StringComparison.Ordinal))
                     .ToList();
-                raw = string.Join('\n', sqlLines).Trim();
+                content = string.Join('\n', sqlLines).Trim();
             }
 
-            // Must start with SELECT (after stripping)
-            if (!raw.StartsWith("SELECT", StringComparison.OrdinalIgnoreCase))
+            // Must start with SELECT
+            if (!content.StartsWith("SELECT", StringComparison.OrdinalIgnoreCase))
                 return null;
 
-            return raw;
+            return content;
         }
         catch (JsonException)
         {
@@ -164,26 +184,17 @@ public class LlmQueryGenerator
     // SQL Validation
     // ──────────────────────────────────────────────────────────────────────────
 
-    /// <summary>
-    /// Validates that the SQL is safe to execute:
-    ///   1. Read-only: no forbidden DML/DDL keywords
-    ///   2. Whitelist: only allowed tables appear in FROM/JOIN clauses
-    /// Throws <see cref="SqlValidationException"/> on any violation.
-    /// </summary>
     private static void ValidateSql(string sql)
     {
-        // 1. Read-only keyword check — word-boundary anchored
         foreach (var keyword in ForbiddenKeywords)
         {
             if (Regex.IsMatch(sql, $@"\b{Regex.Escape(keyword)}\b", RegexOptions.IgnoreCase))
                 throw new SqlValidationException($"SQL contains forbidden keyword: {keyword}");
         }
 
-        // 2. Whitelist table check — extract all table names from FROM / JOIN
         var tableMatches = RxTableName.Matches(sql);
         foreach (Match match in tableMatches)
         {
-            // Group 1 = FROM <table>, Group 2 = JOIN <table>
             var tableName = (match.Groups[1].Value.Length > 0 ? match.Groups[1].Value : match.Groups[2].Value)
                 .ToLowerInvariant()
                 .Trim();

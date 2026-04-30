@@ -90,21 +90,14 @@ public class Program
         builder.Services.AddSingleton<RuntimeRetentionService>();
 
         // ---------------------------------------------------------------------------
-        // NL-to-SQL — Stufe 2: Ollama LLM fallback
+        // NL-to-SQL — Stufe 2: OpenAI Chat Completions fallback
+        // BaseAddress + auth are set per-request in LlmQueryGenerator (options-driven).
         // ---------------------------------------------------------------------------
         builder.Services.Configure<NlQueryOptions>(
             builder.Configuration.GetSection(NlQueryOptions.SectionName));
 
-        var nlQueryOpts = builder.Configuration
-            .GetSection(NlQueryOptions.SectionName)
-            .Get<NlQueryOptions>() ?? new NlQueryOptions();
-
-        builder.Services.AddHttpClient<LlmQueryGenerator>(client =>
-        {
-            client.BaseAddress = new Uri(nlQueryOpts.OllamaBaseUrl);
-            // LLM inference on CPU can be slow — 30s timeout
-            client.Timeout = TimeSpan.FromSeconds(30);
-        });
+        builder.Services.AddHttpClient("hivelog.nlquery");
+        builder.Services.AddSingleton<LlmQueryGenerator>();
 
         // ---------------------------------------------------------------------------
         // Webhook Rules Engine

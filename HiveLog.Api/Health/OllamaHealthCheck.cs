@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using HiveLog.Api.Features.Query.NaturalLanguage;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
@@ -5,10 +6,10 @@ using Microsoft.Extensions.Options;
 namespace HiveLog.Api.Health;
 
 /// <summary>
-/// Pings the configured Ollama instance (GET /) to verify NL-to-SQL availability.
-/// Returns Degraded when Ollama is not reachable — the NL query endpoint will fall back
-/// to template-matching only, so HiveLog remains operational but with reduced capability.
-/// Skipped (always Healthy) when NlQuery.Enabled = false.
+/// Checks the NL-to-SQL OpenAI integration: config presence + actual API reachability.
+/// Pings GET /v1/models — lightweight, no token consumption, verifies API key validity.
+/// Returns Degraded (not Unhealthy) when OpenAI is unreachable so HiveLog stays operational
+/// with template-matcher fallback. Skipped when NlQuery.Enabled = false.
 /// </summary>
 public sealed class OllamaHealthCheck : IHealthCheck
 {
@@ -35,31 +36,37 @@ public sealed class OllamaHealthCheck : IHealthCheck
         var data = new Dictionary<string, object>
         {
             ["enabled"] = true,
-            ["url"] = _options.OllamaBaseUrl,
             ["model"] = _options.Model,
         };
 
+        if (string.IsNullOrWhiteSpace(_options.ApiKey) || _options.ApiKey.StartsWith("<"))
+        {
+            return HealthCheckResult.Degraded(
+                "HiveLog:NlQuery:ApiKey is not configured", data: data);
+        }
+
+        // Ping /v1/models — no token consumption, verifies key + connectivity
         try
         {
             using var http = _httpClientFactory.CreateClient();
+            http.BaseAddress = new Uri(_options.BaseUrl.TrimEnd('/') + "/");
             http.Timeout = TimeSpan.FromSeconds(5);
+            http.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", _options.ApiKey);
 
-            using var response = await http.GetAsync(
-                new Uri(new Uri(_options.OllamaBaseUrl), "/"),
-                HttpCompletionOption.ResponseHeadersRead,
-                cancellationToken);
+            using var response = await http.GetAsync("v1/models", cancellationToken);
 
             if (response.IsSuccessStatusCode)
                 return HealthCheckResult.Healthy(data: data);
 
             data["statusCode"] = (int)response.StatusCode;
             return HealthCheckResult.Degraded(
-                $"Ollama returned HTTP {(int)response.StatusCode}", data: data);
+                $"OpenAI returned HTTP {(int)response.StatusCode}", data: data);
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or OperationCanceledException)
         {
             data["error"] = ex.Message;
-            return HealthCheckResult.Degraded("Ollama not reachable", data: data);
+            return HealthCheckResult.Degraded("OpenAI not reachable", data: data);
         }
     }
 }
