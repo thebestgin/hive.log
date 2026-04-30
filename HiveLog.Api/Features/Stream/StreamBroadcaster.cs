@@ -84,29 +84,8 @@ public sealed class StreamBroadcaster
         var result = new List<LogEntry>(entries.Count);
         foreach (var e in entries)
         {
-            if (filter.Sources is { Count: > 0 } && !filter.Sources.Contains(e.Source))
-                continue;
-            if (filter.Levels is { Count: > 0 } && !filter.Levels.Contains(e.Level))
-                continue;
-            if (filter.Stream is not null && e.Stream != filter.Stream)
-                continue;
-            if (filter.Tags is { Count: > 0 })
-            {
-                if (e.Tags is null or { Length: 0 })
-                    continue;
-                var hasMatchingTag = false;
-                foreach (var tag in e.Tags)
-                {
-                    if (filter.Tags.Contains(tag))
-                    {
-                        hasMatchingTag = true;
-                        break;
-                    }
-                }
-                if (!hasMatchingTag)
-                    continue;
-            }
-            result.Add(e);
+            if (filter.Matches(e))
+                result.Add(e);
         }
         return result.Count == 0 ? [] : [.. result];
     }
