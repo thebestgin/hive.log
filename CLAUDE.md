@@ -8,6 +8,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 dotnet restore
 dotnet build hive.log/HiveLog.Api
 
+# Unit-Tests (Pflicht nach Aenderungen an getesteten Klassen — siehe unten)
+cd hive.log
+dotnet test HiveLog.Api.Tests
+
 # Start (Dev-Default Port 5099)
 dotnet run --project hive.log/HiveLog.Api --urls "http://localhost:5099"
 
@@ -15,6 +19,22 @@ dotnet run --project hive.log/HiveLog.Api --urls "http://localhost:5099"
 cd hive.log
 dotnet ef migrations add <Name> --project HiveLog.Api
 ```
+
+## Unit-Tests — Pflicht nach Aenderungen
+
+`HiveLog.Api.Tests` enthaelt 72 Unit-Tests (xUnit + NSubstitute + EF InMemory). **HiveLog.Api ist hauptsaechlich AI-generiert — die Tests sind Guardrails fuer kuenftige Agenten.**
+
+`dotnet test HiveLog.Api.Tests` ist Pflicht nach jeder Aenderung an:
+
+| Klasse | Tests |
+|---|---|
+| `QueryBuilder` | 18 Tests |
+| `TemplateQueryParser` | 15 Tests |
+| `RulesEngine` | 19 Tests |
+| `IngestBuffer` | 9 Tests |
+| `StreamFilter` | 11 Tests |
+
+Faellt auch nur ein Test durch → Fix vor weiterem Code. Tests sind kein optionales CI-Gate.
 
 Migrations run automatically on startup via `db.Database.MigrateAsync()`. Configuration via `.env` (see `.env-example` when created).
 
