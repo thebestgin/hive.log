@@ -1,4 +1,4 @@
-using System.Net.Http.Json;
+using HiveLog.Client.Generated;
 using HiveLog.Client.Models;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -11,6 +11,7 @@ namespace HiveLog.Client;
 /// Uses 3-Trigger-OR flush (Window / IdleAfter / MaxSize).
 /// On failure: Exponential Backoff (1s, 2s, 4s), then Silent Drop.
 /// On shutdown: Drain remaining entries (up to 5s timeout).
+/// Sends to the BackendServices connector endpoint via the NSwag-generated HiveLogBackendClient.
 /// </summary>
 internal sealed class HiveLogSenderService : BackgroundService
 {
@@ -119,39 +120,37 @@ internal sealed class HiveLogSenderService : BackgroundService
     {
         if (batch.Count == 0) return;
 
+        // Map internal buffer entries to generated DTO types
         var request = new IngestRequest
         {
             Source = _opts.Source,
             SourceType = _opts.SourceType,
             InstanceId = _opts.InstanceId ?? Environment.MachineName,
-            Entries = batch,
+            Entries = batch.Select(MapToDto).ToList(),
         };
 
         for (int attempt = 0; attempt < RetryDelays.Length; attempt++)
         {
             try
             {
-                var client = _httpClientFactory.CreateClient("hivelog");
-                var response = await client.PostAsJsonAsync(
-                    "/api/hivelog/v1/ingest", request, ct);
+                var httpClient = _httpClientFactory.CreateClient("hivelog");
+                var client = new HiveLogBackendClient(_opts.BaseUrl, httpClient);
+                var result = await client.IngestAsync(request, ct);
 
-                if (response.IsSuccessStatusCode)
-                {
-                    _metrics.RecordSent(batch.Count);
-                    return;
-                }
-
-                // 503 = server backpressure — retry
-                if ((int)response.StatusCode == 503 && attempt < RetryDelays.Length - 1)
-                {
-                    _metrics.RecordRetry();
-                    await Task.Delay(RetryDelays[attempt], ct);
-                    continue;
-                }
-
+                _metrics.RecordSent(batch.Count);
+                return;
+            }
+            catch (HiveLogBackendClientException ex) when (ex.StatusCode == 503 && attempt < RetryDelays.Length - 1)
+            {
+                // Server backpressure — retry with backoff
+                _metrics.RecordRetry();
+                await Task.Delay(RetryDelays[attempt], ct);
+            }
+            catch (HiveLogBackendClientException ex)
+            {
                 // Other non-success (4xx) — no point retrying
                 _logger.LogWarning("[HiveLog] Ingest returned {StatusCode}, dropping {Count} entries",
-                    (int)response.StatusCode, batch.Count);
+                    ex.StatusCode, batch.Count);
                 _metrics.RecordDropped(batch.Count);
                 return;
             }
@@ -172,6 +171,25 @@ internal sealed class HiveLogSenderService : BackgroundService
             }
         }
     }
+
+    private static LogEntryDto MapToDto(ClientLogEntry entry) => new()
+    {
+        Timestamp = entry.Timestamp,
+        TraceId = entry.TraceId,
+        SpanId = entry.SpanId,
+        ParentSpanId = entry.ParentSpanId,
+        Level = entry.Level,
+        Category = entry.Category,
+        Message = entry.Message,
+        MessageTemplate = entry.MessageTemplate,
+        Properties = entry.Properties,
+        Exception = entry.Exception,
+        UserId = Guid.TryParse(entry.UserId, out var userId) ? userId : null,
+        RequestId = entry.RequestId,
+        SessionId = entry.SessionId,
+        Tags = entry.Tags,
+        Stream = entry.Stream,
+    };
 
     public override async Task StopAsync(CancellationToken ct)
     {

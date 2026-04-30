@@ -1,0 +1,62 @@
+{
+  "runtime": "Net100",
+  "defaultVariables": null,
+  "documentGenerator": {
+    "fromDocument": {
+      "url": "./swagger.backend-services.json",
+      "output": null
+    }
+  },
+  "codeGenerators": {
+    "openApiToCSharpClient": {
+      "className": "HiveLogBackendClient",
+      "namespace": "HiveLog.Client.Generated",
+      "output": "./_output/HiveLogBackendClient.cs",
+      "generateClientClasses": true,
+      "generateClientInterfaces": true,
+      "generateDtoTypes": true,
+      "generateOptionalParameters": true,
+      "generateContractsOutput": false,
+      "generateExceptionClasses": true,
+      "exceptionClass": "HiveLogBackendClientException",
+      "injectHttpClient": true,
+      "disposeHttpClient": false,
+      "useHttpClientCreationMethod": false,
+      "httpClientType": "System.Net.Http.HttpClient",
+      "useBaseUrl": true,
+      "useBaseUrlProperty": true,
+      "generateSyncMethods": false,
+      "generatePrepareRequestAndProcessResponseMethods": true,
+      "generatePrepareRequestAndProcessResponseAsAsyncMethods": false,
+      "generateUpdateJsonSerializerSettingsMethod": true,
+      "jsonLibrary": "SystemTextJson",
+      "dateType": "System.DateTimeOffset",
+      "dateTimeType": "System.DateTimeOffset",
+      "timeType": "System.TimeSpan",
+      "nullableReferenceTypes": true,
+      "generateDefaultValues": true,
+      "clientClassAccessModifier": "public",
+      "typeAccessModifier": "public",
+      "clientBaseClass": null,
+      "configurationClass": null,
+      "generateBaseUrlProperty": true,
+      "generateSyncInterfaces": false,
+      "generateOptionalParameterMethods": true,
+      "generateDtoTypesInSeparateFiles": false,
+      "generateClientClassesInSeparateFiles": false,
+      "generateJsonMethods": true,
+      "wrapDtoExceptions": false,
+      "useRequestAndResponseSerializationSettings": true,
+      "excludedTypeNames": [],
+      "excludedParameterNames": [],
+      "handleReferences": true,
+      "generateFormParameters": true,
+      "usePathParametersWithSquareBrackets": false,
+      "templateDirectory": null,
+      "operationGenerationMode": "MultipleClientsFromOperationId",
+      "additionalNamespaceUsages": [],
+      "generateBaseUrlOnClientClasses": true,
+      "generateClientInterfacesOnContractsOutput": false
+    }
+  }
+}
