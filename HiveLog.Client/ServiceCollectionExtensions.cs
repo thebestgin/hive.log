@@ -13,7 +13,7 @@ public static class ServiceCollectionExtensions
     /// Usage:
     ///   builder.Logging.AddHiveLog(config.GetSection("HiveLog"))
     ///
-    /// Required config keys: BaseUrl, ApiKey, Source
+    /// Required config keys: BaseUrl, ApiKey
     /// </summary>
     public static ILoggingBuilder AddHiveLog(
         this ILoggingBuilder builder,

@@ -120,11 +120,10 @@ internal sealed class HiveLogSenderService : BackgroundService
     {
         if (batch.Count == 0) return;
 
-        // Map internal buffer entries to generated DTO types
-        var request = new IngestRequest
+        // Map internal buffer entries to generated DTO types.
+        // source/sourceType are set by the manifest on the server — not in the request body.
+        var request = new ConnectorIngestRequest
         {
-            Source = _opts.Source,
-            SourceType = _opts.SourceType,
             InstanceId = _opts.InstanceId ?? Environment.MachineName,
             Entries = batch.Select(MapToDto).ToList(),
         };
@@ -135,7 +134,7 @@ internal sealed class HiveLogSenderService : BackgroundService
             {
                 var httpClient = _httpClientFactory.CreateClient("hivelog");
                 var client = new HiveLogBackendClient(_opts.BaseUrl, httpClient);
-                var result = await client.IngestAsync(request, ct);
+                var result = await client.IngestAsync("backend-service", request, ct);
 
                 _metrics.RecordSent(batch.Count);
                 return;

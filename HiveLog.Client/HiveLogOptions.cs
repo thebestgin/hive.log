@@ -7,14 +7,8 @@ public class HiveLogOptions
     /// <summary>HiveLog API base URL. Example: http://localhost:5099</summary>
     public string BaseUrl { get; set; } = null!;
 
-    /// <summary>API key for X-Api-Key header.</summary>
+    /// <summary>API key for X-Api-Key header. Identifies the service to HiveLog via the backend-service connector.</summary>
     public string ApiKey { get; set; } = null!;
-
-    /// <summary>Source identifier. Example: "talents-api"</summary>
-    public string Source { get; set; } = null!;
-
-    /// <summary>Source type. Default: "backend"</summary>
-    public string SourceType { get; set; } = "backend";
 
     /// <summary>Optional instance identifier. Default: machine name.</summary>
     public string? InstanceId { get; set; }

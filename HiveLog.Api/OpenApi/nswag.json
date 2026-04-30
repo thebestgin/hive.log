@@ -3,7 +3,7 @@
   "defaultVariables": null,
   "documentGenerator": {
     "fromDocument": {
-      "url": "./swagger.backend-services.json",
+      "url": "./swagger.json",
       "output": null
     }
   },

@@ -11,8 +11,8 @@ if [[ ! -f "${CONFIG_PATH}" ]]; then
   exit 1
 fi
 
-if [[ ! -f "${SCRIPT_DIR}/swagger.backend-services.json" ]]; then
-  echo "swagger.backend-services.json not found — start the server first to generate it" >&2
+if [[ ! -f "${SCRIPT_DIR}/swagger.json" ]]; then
+  echo "swagger.json not found — start the server first to generate it" >&2
   exit 1
 fi
 

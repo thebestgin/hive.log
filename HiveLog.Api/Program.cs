@@ -1,7 +1,8 @@
 using System.Text.Json;
 using HiveLog.Api.Features.Admin;
 using HiveLog.Api.Features.Aggregate;
-using HiveLog.Api.Features.Connectors.BackendServices;
+using HiveLog.Api.Features.Connectors;
+using HiveLog.Api.Features.Connectors.Manifest;
 using HiveLog.Api.Features.Ingest;
 using HiveLog.Api.Features.Query.NaturalLanguage;
 using HiveLog.Api.Features.Retention;
@@ -31,6 +32,16 @@ public class Program
 
         var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is required.");
+
+        // ---------------------------------------------------------------------------
+        // HiveLog Manifest (Connector-Steuerung)
+        // ---------------------------------------------------------------------------
+        var manifestPath = builder.Configuration["HiveLogManifest:FilePath"]
+            ?? throw new InvalidOperationException(
+                "HiveLogManifest:FilePath (ENV: HiveLogManifest__FilePath) is required.");
+
+        var manifest = ManifestLoader.LoadAndValidate(manifestPath);
+        builder.Services.AddSingleton(manifest);
 
         // ---------------------------------------------------------------------------
         // Database
@@ -86,7 +97,7 @@ public class Program
         builder.Services.Configure<AdminOptions>(
             builder.Configuration.GetSection(AdminOptions.SectionName));
         builder.Services.AddSingleton<AdminApiKeyFilter>();
-        builder.Services.AddSingleton<IngestApiKeyFilter>();
+        builder.Services.AddSingleton<ConnectorAuthFilter>();
         builder.Services.AddSingleton<RuntimeRetentionService>();
 
         // ---------------------------------------------------------------------------
@@ -153,25 +164,7 @@ public class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(c =>
         {
-            c.SwaggerDoc("v1", new OpenApiInfo { Title = "hive.log — Core API", Version = "v1" });
-            c.SwaggerDoc("webapp", new OpenApiInfo
-            {
-                Title = "hive.log — WebApp Connector",
-                Version = "v1",
-                Description = "Frontend log ingest. No API key required."
-            });
-            c.SwaggerDoc("backend-services", new OpenApiInfo
-            {
-                Title = "hive.log — BackendServices Connector",
-                Version = "v1",
-                Description = "Log ingest for .NET backend services. Requires X-Api-Key header."
-            });
-            // v1 includes all endpoints except connector-specific groups;
-            // connector groups (webapp, backend-services) are isolated documents for client generation.
-            c.DocInclusionPredicate((docName, api) =>
-                docName == "v1"
-                    ? api.GroupName != "webapp" && api.GroupName != "backend-services"
-                    : api.GroupName == docName);
+            c.SwaggerDoc("v1", new OpenApiInfo { Title = "hive.log", Version = "v1" });
             c.CustomSchemaIds(type => type.FullName);
         });
 
@@ -195,9 +188,7 @@ public class Program
         app.UseSwagger();
         app.UseSwaggerUI(c =>
         {
-            c.SwaggerEndpoint("/swagger/v1/swagger.json", "hive.log — Core API");
-            c.SwaggerEndpoint("/swagger/webapp/swagger.json", "WebApp Connector");
-            c.SwaggerEndpoint("/swagger/backend-services/swagger.json", "BackendServices Connector");
+            c.SwaggerEndpoint("/swagger/v1/swagger.json", "hive.log");
         });
 
         app.UseAuthentication();
@@ -205,10 +196,8 @@ public class Program
 
         app.MapControllers();
 
-        // Save swagger.json files for tooling / client generation
+        // Save swagger.json for tooling / client generation
         SaveSwaggerJson(app.Services, "v1", "OpenApi/swagger.json");
-        SaveSwaggerJson(app.Services, "webapp", "OpenApi/swagger.webapp.json");
-        SaveSwaggerJson(app.Services, "backend-services", "OpenApi/swagger.backend-services.json");
 
         // Health endpoint returns JSON body including bufferDepth + droppedTotal
         app.MapHealthChecks("/health", new HealthCheckOptions

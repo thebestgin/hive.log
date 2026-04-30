@@ -33,7 +33,7 @@ public sealed class HiveLogClient : IHiveLogClient
             Timestamp = DateTimeOffset.UtcNow,
             TraceId = activity?.TraceId.ToString(),
             SpanId = activity?.SpanId.ToString(),
-            ParentSpanId = activity?.ParentSpanId,
+            ParentSpanId = activity?.ParentSpanId.ToString(),
             Level = (int)level,
             Category = category,
             Message = message,

@@ -1,0 +1,44 @@
+{
+  "manifestVersion": "1.0",
+  "connectors": [
+    {
+      "id": "backend-service",
+      "name": "Backend Services",
+      "source": "backend-service",
+      "sourceType": "backend",
+      "auth": {
+        "type": "apiKey",
+        "headerName": "X-Api-Key",
+        "apiAccesses": [
+          { "id": "svc-talents",       "name": "Talents API",       "apiKey": "dev-talents-hivelog-key" },
+          { "id": "svc-userprofiles",  "name": "UserProfiles API",  "apiKey": "dev-userprofiles-hivelog-key" },
+          { "id": "svc-engagement",    "name": "Engagement API",    "apiKey": "dev-engagement-hivelog-key" },
+          { "id": "svc-discovery",     "name": "Discovery API",     "apiKey": "dev-discovery-hivelog-key" },
+          { "id": "svc-jobdates",      "name": "JobDates API",      "apiKey": "dev-jobdates-hivelog-key" },
+          { "id": "svc-blobxxx",       "name": "BlobXXX API",       "apiKey": "dev-blobxxx-hivelog-key" },
+          { "id": "svc-identity",      "name": "Identity API",      "apiKey": "dev-identity-hivelog-key" },
+          { "id": "svc-syncserver",    "name": "SyncServer",        "apiKey": "dev-syncserver-hivelog-key" },
+          { "id": "svc-notifications", "name": "Notifications API", "apiKey": "dev-notifications-hivelog-key" }
+        ]
+      }
+    },
+    {
+      "id": "webapp-jwt",
+      "name": "WebApp (authenticated)",
+      "source": "webapp",
+      "sourceType": "frontend",
+      "auth": {
+        "type": "jwt"
+      }
+    },
+    {
+      "id": "webapp-anonymous",
+      "name": "WebApp (anonymous)",
+      "source": "webapp",
+      "sourceType": "frontend",
+      "auth": {
+        "type": "none"
+      }
+    }
+  ]
+}

@@ -29,9 +29,59 @@ namespace HiveLog.Client.Generated
     {
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>OK</returns>
+        /// <exception cref="HiveLogBackendClientException">A server side error occurred.</exception>
+        System.Threading.Tasks.Task<FlushResponse> FlushAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>OK</returns>
+        /// <exception cref="HiveLogBackendClientException">A server side error occurred.</exception>
+        System.Threading.Tasks.Task<StatsResponse> StatsAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>OK</returns>
+        /// <exception cref="HiveLogBackendClientException">A server side error occurred.</exception>
+        System.Threading.Tasks.Task<RetentionResponse> RetentionAsync(RetentionRequest body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>OK</returns>
+        /// <exception cref="HiveLogBackendClientException">A server side error occurred.</exception>
+        System.Threading.Tasks.Task<AggregateResponse> AggregateAsync(AggregateRequest body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>Accepted</returns>
         /// <exception cref="HiveLogBackendClientException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task<IngestResponse> IngestAsync(IngestRequest body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+        System.Threading.Tasks.Task<IngestResponse> IngestAsync(string connectorId, ConnectorIngestRequest body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>OK</returns>
+        /// <exception cref="HiveLogBackendClientException">A server side error occurred.</exception>
+        System.Threading.Tasks.Task<QueryResponse> QueryAsync(QueryRequest body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>OK</returns>
+        /// <exception cref="HiveLogBackendClientException">A server side error occurred.</exception>
+        System.Threading.Tasks.Task<NaturalQueryResponse> NaturalAsync(NaturalQueryRequest body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>Created</returns>
+        /// <exception cref="HiveLogBackendClientException">A server side error occurred.</exception>
+        System.Threading.Tasks.Task<RuleResponse> RulesPOSTAsync(CreateRuleRequest body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>OK</returns>
+        /// <exception cref="HiveLogBackendClientException">A server side error occurred.</exception>
+        System.Threading.Tasks.Task<System.Collections.Generic.ICollection<RuleResponse>> RulesAllAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>No Content</returns>
+        /// <exception cref="HiveLogBackendClientException">A server side error occurred.</exception>
+        System.Threading.Tasks.Task RulesDELETEAsync(System.Guid id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>OK</returns>
+        /// <exception cref="HiveLogBackendClientException">A server side error occurred.</exception>
+        System.Threading.Tasks.Task StreamAsync(string sources = null, string levels = null, string stream = null, string tags = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
 
     }
 
@@ -87,9 +137,152 @@ namespace HiveLog.Client.Generated
         partial void ProcessResponse(System.Net.Http.HttpClient client, System.Net.Http.HttpResponseMessage response);
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>Accepted</returns>
+        /// <returns>OK</returns>
         /// <exception cref="HiveLogBackendClientException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<IngestResponse> IngestAsync(IngestRequest body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        public virtual async System.Threading.Tasks.Task<FlushResponse> FlushAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        {
+            var client_ = _httpClient;
+            var disposeClient_ = false;
+            try
+            {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                    request_.Content = new System.Net.Http.StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json");
+                    request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
+
+                    var urlBuilder_ = new System.Text.StringBuilder();
+                    if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
+                    // Operation Path: "api/hivelog/v1/admin/flush"
+                    urlBuilder_.Append("api/hivelog/v1/admin/flush");
+
+                    PrepareRequest(client_, request_, urlBuilder_);
+
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+
+                    PrepareRequest(client_, request_, url_);
+
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    var disposeResponse_ = true;
+                    try
+                    {
+                        var headers_ = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>>();
+                        foreach (var item_ in response_.Headers)
+                            headers_[item_.Key] = item_.Value;
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+
+                        ProcessResponse(client_, response_);
+
+                        var status_ = (int)response_.StatusCode;
+                        if (status_ == 200)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<FlushResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new HiveLogBackendClientException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
+                        }
+                        else
+                        {
+                            var responseData_ = response_.Content == null ? null : await ReadAsStringAsync(response_.Content, cancellationToken).ConfigureAwait(false);
+                            throw new HiveLogBackendClientException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
+                        }
+                    }
+                    finally
+                    {
+                        if (disposeResponse_)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                if (disposeClient_)
+                    client_.Dispose();
+            }
+        }
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>OK</returns>
+        /// <exception cref="HiveLogBackendClientException">A server side error occurred.</exception>
+        public virtual async System.Threading.Tasks.Task<StatsResponse> StatsAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        {
+            var client_ = _httpClient;
+            var disposeClient_ = false;
+            try
+            {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                    request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
+
+                    var urlBuilder_ = new System.Text.StringBuilder();
+                    if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
+                    // Operation Path: "api/hivelog/v1/admin/stats"
+                    urlBuilder_.Append("api/hivelog/v1/admin/stats");
+
+                    PrepareRequest(client_, request_, urlBuilder_);
+
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+
+                    PrepareRequest(client_, request_, url_);
+
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    var disposeResponse_ = true;
+                    try
+                    {
+                        var headers_ = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>>();
+                        foreach (var item_ in response_.Headers)
+                            headers_[item_.Key] = item_.Value;
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+
+                        ProcessResponse(client_, response_);
+
+                        var status_ = (int)response_.StatusCode;
+                        if (status_ == 200)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<StatsResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new HiveLogBackendClientException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
+                        }
+                        else
+                        {
+                            var responseData_ = response_.Content == null ? null : await ReadAsStringAsync(response_.Content, cancellationToken).ConfigureAwait(false);
+                            throw new HiveLogBackendClientException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
+                        }
+                    }
+                    finally
+                    {
+                        if (disposeResponse_)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                if (disposeClient_)
+                    client_.Dispose();
+            }
+        }
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>OK</returns>
+        /// <exception cref="HiveLogBackendClientException">A server side error occurred.</exception>
+        public virtual async System.Threading.Tasks.Task<RetentionResponse> RetentionAsync(RetentionRequest body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -106,8 +299,183 @@ namespace HiveLog.Client.Generated
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                     if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
-                    // Operation Path: "api/hivelog/v1/connectors/backend-services/ingest"
-                    urlBuilder_.Append("api/hivelog/v1/connectors/backend-services/ingest");
+                    // Operation Path: "api/hivelog/v1/admin/retention"
+                    urlBuilder_.Append("api/hivelog/v1/admin/retention");
+
+                    PrepareRequest(client_, request_, urlBuilder_);
+
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+
+                    PrepareRequest(client_, request_, url_);
+
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    var disposeResponse_ = true;
+                    try
+                    {
+                        var headers_ = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>>();
+                        foreach (var item_ in response_.Headers)
+                            headers_[item_.Key] = item_.Value;
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+
+                        ProcessResponse(client_, response_);
+
+                        var status_ = (int)response_.StatusCode;
+                        if (status_ == 200)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<RetentionResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new HiveLogBackendClientException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
+                        }
+                        else
+                        if (status_ == 400)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new HiveLogBackendClientException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            throw new HiveLogBackendClientException<ProblemDetails>("Bad Request", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
+                        }
+                        else
+                        {
+                            var responseData_ = response_.Content == null ? null : await ReadAsStringAsync(response_.Content, cancellationToken).ConfigureAwait(false);
+                            throw new HiveLogBackendClientException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
+                        }
+                    }
+                    finally
+                    {
+                        if (disposeResponse_)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                if (disposeClient_)
+                    client_.Dispose();
+            }
+        }
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>OK</returns>
+        /// <exception cref="HiveLogBackendClientException">A server side error occurred.</exception>
+        public virtual async System.Threading.Tasks.Task<AggregateResponse> AggregateAsync(AggregateRequest body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        {
+            var client_ = _httpClient;
+            var disposeClient_ = false;
+            try
+            {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                    var json_ = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(body, RequestJsonSerializerSettings);
+                    var content_ = new System.Net.Http.ByteArrayContent(json_);
+                    content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
+                    request_.Content = content_;
+                    request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
+
+                    var urlBuilder_ = new System.Text.StringBuilder();
+                    if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
+                    // Operation Path: "api/hivelog/v1/aggregate"
+                    urlBuilder_.Append("api/hivelog/v1/aggregate");
+
+                    PrepareRequest(client_, request_, urlBuilder_);
+
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+
+                    PrepareRequest(client_, request_, url_);
+
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    var disposeResponse_ = true;
+                    try
+                    {
+                        var headers_ = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>>();
+                        foreach (var item_ in response_.Headers)
+                            headers_[item_.Key] = item_.Value;
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+
+                        ProcessResponse(client_, response_);
+
+                        var status_ = (int)response_.StatusCode;
+                        if (status_ == 200)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<AggregateResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new HiveLogBackendClientException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
+                        }
+                        else
+                        if (status_ == 400)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new HiveLogBackendClientException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            throw new HiveLogBackendClientException<ProblemDetails>("Bad Request", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
+                        }
+                        else
+                        {
+                            var responseData_ = response_.Content == null ? null : await ReadAsStringAsync(response_.Content, cancellationToken).ConfigureAwait(false);
+                            throw new HiveLogBackendClientException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
+                        }
+                    }
+                    finally
+                    {
+                        if (disposeResponse_)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                if (disposeClient_)
+                    client_.Dispose();
+            }
+        }
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>Accepted</returns>
+        /// <exception cref="HiveLogBackendClientException">A server side error occurred.</exception>
+        public virtual async System.Threading.Tasks.Task<IngestResponse> IngestAsync(string connectorId, ConnectorIngestRequest body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        {
+            if (connectorId == null)
+                throw new System.ArgumentNullException("connectorId");
+
+            var client_ = _httpClient;
+            var disposeClient_ = false;
+            try
+            {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                    var json_ = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(body, RequestJsonSerializerSettings);
+                    var content_ = new System.Net.Http.ByteArrayContent(json_);
+                    content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
+                    request_.Content = content_;
+                    request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
+
+                    var urlBuilder_ = new System.Text.StringBuilder();
+                    if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
+                    // Operation Path: "api/hivelog/v1/connectors/{connectorId}/ingest"
+                    urlBuilder_.Append("api/hivelog/v1/connectors/");
+                    urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(connectorId, System.Globalization.CultureInfo.InvariantCulture)));
+                    urlBuilder_.Append("/ingest");
 
                     PrepareRequest(client_, request_, urlBuilder_);
 
@@ -162,10 +530,508 @@ namespace HiveLog.Client.Generated
                             throw new HiveLogBackendClientException<ProblemDetails>("Unauthorized", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
                         }
                         else
+                        if (status_ == 404)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new HiveLogBackendClientException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            throw new HiveLogBackendClientException<ProblemDetails>("Not Found", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
+                        }
+                        else
                         if (status_ == 503)
                         {
                             string responseText_ = ( response_.Content == null ) ? string.Empty : await ReadAsStringAsync(response_.Content, cancellationToken).ConfigureAwait(false);
                             throw new HiveLogBackendClientException("Service Unavailable", status_, responseText_, headers_, null);
+                        }
+                        else
+                        {
+                            var responseData_ = response_.Content == null ? null : await ReadAsStringAsync(response_.Content, cancellationToken).ConfigureAwait(false);
+                            throw new HiveLogBackendClientException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
+                        }
+                    }
+                    finally
+                    {
+                        if (disposeResponse_)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                if (disposeClient_)
+                    client_.Dispose();
+            }
+        }
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>OK</returns>
+        /// <exception cref="HiveLogBackendClientException">A server side error occurred.</exception>
+        public virtual async System.Threading.Tasks.Task<QueryResponse> QueryAsync(QueryRequest body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        {
+            var client_ = _httpClient;
+            var disposeClient_ = false;
+            try
+            {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                    var json_ = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(body, RequestJsonSerializerSettings);
+                    var content_ = new System.Net.Http.ByteArrayContent(json_);
+                    content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
+                    request_.Content = content_;
+                    request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
+
+                    var urlBuilder_ = new System.Text.StringBuilder();
+                    if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
+                    // Operation Path: "api/hivelog/v1/query"
+                    urlBuilder_.Append("api/hivelog/v1/query");
+
+                    PrepareRequest(client_, request_, urlBuilder_);
+
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+
+                    PrepareRequest(client_, request_, url_);
+
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    var disposeResponse_ = true;
+                    try
+                    {
+                        var headers_ = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>>();
+                        foreach (var item_ in response_.Headers)
+                            headers_[item_.Key] = item_.Value;
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+
+                        ProcessResponse(client_, response_);
+
+                        var status_ = (int)response_.StatusCode;
+                        if (status_ == 200)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<QueryResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new HiveLogBackendClientException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
+                        }
+                        else
+                        if (status_ == 400)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new HiveLogBackendClientException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            throw new HiveLogBackendClientException<ProblemDetails>("Bad Request", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
+                        }
+                        else
+                        {
+                            var responseData_ = response_.Content == null ? null : await ReadAsStringAsync(response_.Content, cancellationToken).ConfigureAwait(false);
+                            throw new HiveLogBackendClientException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
+                        }
+                    }
+                    finally
+                    {
+                        if (disposeResponse_)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                if (disposeClient_)
+                    client_.Dispose();
+            }
+        }
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>OK</returns>
+        /// <exception cref="HiveLogBackendClientException">A server side error occurred.</exception>
+        public virtual async System.Threading.Tasks.Task<NaturalQueryResponse> NaturalAsync(NaturalQueryRequest body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        {
+            var client_ = _httpClient;
+            var disposeClient_ = false;
+            try
+            {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                    var json_ = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(body, RequestJsonSerializerSettings);
+                    var content_ = new System.Net.Http.ByteArrayContent(json_);
+                    content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
+                    request_.Content = content_;
+                    request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
+
+                    var urlBuilder_ = new System.Text.StringBuilder();
+                    if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
+                    // Operation Path: "api/hivelog/v1/query/natural"
+                    urlBuilder_.Append("api/hivelog/v1/query/natural");
+
+                    PrepareRequest(client_, request_, urlBuilder_);
+
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+
+                    PrepareRequest(client_, request_, url_);
+
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    var disposeResponse_ = true;
+                    try
+                    {
+                        var headers_ = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>>();
+                        foreach (var item_ in response_.Headers)
+                            headers_[item_.Key] = item_.Value;
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+
+                        ProcessResponse(client_, response_);
+
+                        var status_ = (int)response_.StatusCode;
+                        if (status_ == 200)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<NaturalQueryResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new HiveLogBackendClientException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
+                        }
+                        else
+                        if (status_ == 400)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new HiveLogBackendClientException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            throw new HiveLogBackendClientException<ProblemDetails>("Bad Request", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
+                        }
+                        else
+                        {
+                            var responseData_ = response_.Content == null ? null : await ReadAsStringAsync(response_.Content, cancellationToken).ConfigureAwait(false);
+                            throw new HiveLogBackendClientException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
+                        }
+                    }
+                    finally
+                    {
+                        if (disposeResponse_)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                if (disposeClient_)
+                    client_.Dispose();
+            }
+        }
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>Created</returns>
+        /// <exception cref="HiveLogBackendClientException">A server side error occurred.</exception>
+        public virtual async System.Threading.Tasks.Task<RuleResponse> RulesPOSTAsync(CreateRuleRequest body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        {
+            var client_ = _httpClient;
+            var disposeClient_ = false;
+            try
+            {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                    var json_ = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(body, RequestJsonSerializerSettings);
+                    var content_ = new System.Net.Http.ByteArrayContent(json_);
+                    content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
+                    request_.Content = content_;
+                    request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
+
+                    var urlBuilder_ = new System.Text.StringBuilder();
+                    if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
+                    // Operation Path: "api/hivelog/v1/admin/rules"
+                    urlBuilder_.Append("api/hivelog/v1/admin/rules");
+
+                    PrepareRequest(client_, request_, urlBuilder_);
+
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+
+                    PrepareRequest(client_, request_, url_);
+
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    var disposeResponse_ = true;
+                    try
+                    {
+                        var headers_ = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>>();
+                        foreach (var item_ in response_.Headers)
+                            headers_[item_.Key] = item_.Value;
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+
+                        ProcessResponse(client_, response_);
+
+                        var status_ = (int)response_.StatusCode;
+                        if (status_ == 201)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<RuleResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new HiveLogBackendClientException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
+                        }
+                        else
+                        if (status_ == 400)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new HiveLogBackendClientException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            throw new HiveLogBackendClientException<ProblemDetails>("Bad Request", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
+                        }
+                        else
+                        {
+                            var responseData_ = response_.Content == null ? null : await ReadAsStringAsync(response_.Content, cancellationToken).ConfigureAwait(false);
+                            throw new HiveLogBackendClientException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
+                        }
+                    }
+                    finally
+                    {
+                        if (disposeResponse_)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                if (disposeClient_)
+                    client_.Dispose();
+            }
+        }
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>OK</returns>
+        /// <exception cref="HiveLogBackendClientException">A server side error occurred.</exception>
+        public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<RuleResponse>> RulesAllAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        {
+            var client_ = _httpClient;
+            var disposeClient_ = false;
+            try
+            {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                    request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
+
+                    var urlBuilder_ = new System.Text.StringBuilder();
+                    if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
+                    // Operation Path: "api/hivelog/v1/admin/rules"
+                    urlBuilder_.Append("api/hivelog/v1/admin/rules");
+
+                    PrepareRequest(client_, request_, urlBuilder_);
+
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+
+                    PrepareRequest(client_, request_, url_);
+
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    var disposeResponse_ = true;
+                    try
+                    {
+                        var headers_ = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>>();
+                        foreach (var item_ in response_.Headers)
+                            headers_[item_.Key] = item_.Value;
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+
+                        ProcessResponse(client_, response_);
+
+                        var status_ = (int)response_.StatusCode;
+                        if (status_ == 200)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<System.Collections.Generic.ICollection<RuleResponse>>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new HiveLogBackendClientException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
+                        }
+                        else
+                        {
+                            var responseData_ = response_.Content == null ? null : await ReadAsStringAsync(response_.Content, cancellationToken).ConfigureAwait(false);
+                            throw new HiveLogBackendClientException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
+                        }
+                    }
+                    finally
+                    {
+                        if (disposeResponse_)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                if (disposeClient_)
+                    client_.Dispose();
+            }
+        }
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>No Content</returns>
+        /// <exception cref="HiveLogBackendClientException">A server side error occurred.</exception>
+        public virtual async System.Threading.Tasks.Task RulesDELETEAsync(System.Guid id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        {
+            if (id == null)
+                throw new System.ArgumentNullException("id");
+
+            var client_ = _httpClient;
+            var disposeClient_ = false;
+            try
+            {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                    request_.Method = new System.Net.Http.HttpMethod("DELETE");
+
+                    var urlBuilder_ = new System.Text.StringBuilder();
+                    if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
+                    // Operation Path: "api/hivelog/v1/admin/rules/{id}"
+                    urlBuilder_.Append("api/hivelog/v1/admin/rules/");
+                    urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(id, System.Globalization.CultureInfo.InvariantCulture)));
+
+                    PrepareRequest(client_, request_, urlBuilder_);
+
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+
+                    PrepareRequest(client_, request_, url_);
+
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    var disposeResponse_ = true;
+                    try
+                    {
+                        var headers_ = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>>();
+                        foreach (var item_ in response_.Headers)
+                            headers_[item_.Key] = item_.Value;
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+
+                        ProcessResponse(client_, response_);
+
+                        var status_ = (int)response_.StatusCode;
+                        if (status_ == 204)
+                        {
+                            return;
+                        }
+                        else
+                        if (status_ == 404)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new HiveLogBackendClientException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            throw new HiveLogBackendClientException<ProblemDetails>("Not Found", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
+                        }
+                        else
+                        {
+                            var responseData_ = response_.Content == null ? null : await ReadAsStringAsync(response_.Content, cancellationToken).ConfigureAwait(false);
+                            throw new HiveLogBackendClientException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
+                        }
+                    }
+                    finally
+                    {
+                        if (disposeResponse_)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                if (disposeClient_)
+                    client_.Dispose();
+            }
+        }
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>OK</returns>
+        /// <exception cref="HiveLogBackendClientException">A server side error occurred.</exception>
+        public virtual async System.Threading.Tasks.Task StreamAsync(string sources = null, string levels = null, string stream = null, string tags = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        {
+            var client_ = _httpClient;
+            var disposeClient_ = false;
+            try
+            {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                    request_.Method = new System.Net.Http.HttpMethod("GET");
+
+                    var urlBuilder_ = new System.Text.StringBuilder();
+                    if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
+                    // Operation Path: "api/hivelog/v1/stream"
+                    urlBuilder_.Append("api/hivelog/v1/stream");
+                    urlBuilder_.Append('?');
+                    if (sources != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("sources")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(sources, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    if (levels != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("levels")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(levels, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    if (stream != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("stream")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(stream, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    if (tags != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("tags")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(tags, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    urlBuilder_.Length--;
+
+                    PrepareRequest(client_, request_, urlBuilder_);
+
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+
+                    PrepareRequest(client_, request_, url_);
+
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    var disposeResponse_ = true;
+                    try
+                    {
+                        var headers_ = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>>();
+                        foreach (var item_ in response_.Headers)
+                            headers_[item_.Key] = item_.Value;
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+
+                        ProcessResponse(client_, response_);
+
+                        var status_ = (int)response_.StatusCode;
+                        if (status_ == 200)
+                        {
+                            return;
                         }
                         else
                         {
@@ -317,18 +1183,296 @@ namespace HiveLog.Client.Generated
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.0.0 (NJsonSchema v11.5.0.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class IngestRequest
+    public partial class FlushResponse
     {
 
+        [System.Text.Json.Serialization.JsonPropertyName("entriesFlushed")]
+        public int EntriesFlushed { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("elapsedMs")]
+        public double ElapsedMs { get; set; }
+
+        public string ToJson()
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Serialize(this, options);
+
+        }
+        public static FlushResponse FromJson(string data)
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Deserialize<FlushResponse>(data, options);
+
+        }
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.0.0 (NJsonSchema v11.5.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class RetentionDaysRequest
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("app")]
+        [System.ComponentModel.DataAnnotations.Range(1, 3650)]
+        public int? App { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("agent")]
+        [System.ComponentModel.DataAnnotations.Range(1, 3650)]
+        public int? Agent { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("audit")]
+        [System.ComponentModel.DataAnnotations.Range(1, 3650)]
+        public int? Audit { get; set; }
+
+        public string ToJson()
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Serialize(this, options);
+
+        }
+        public static RetentionDaysRequest FromJson(string data)
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Deserialize<RetentionDaysRequest>(data, options);
+
+        }
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.0.0 (NJsonSchema v11.5.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class RetentionRequest
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("retentionDays")]
+        [System.ComponentModel.DataAnnotations.Required]
+        public RetentionDaysRequest RetentionDays { get; set; } = new RetentionDaysRequest();
+
+        public string ToJson()
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Serialize(this, options);
+
+        }
+        public static RetentionRequest FromJson(string data)
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Deserialize<RetentionRequest>(data, options);
+
+        }
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.0.0 (NJsonSchema v11.5.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class RetentionResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("appDays")]
+        public int AppDays { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("agentDays")]
+        public int AgentDays { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("auditDays")]
+        public int AuditDays { get; set; }
+
+        public string ToJson()
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Serialize(this, options);
+
+        }
+        public static RetentionResponse FromJson(string data)
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Deserialize<RetentionResponse>(data, options);
+
+        }
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.0.0 (NJsonSchema v11.5.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class StatsResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("bufferDepth")]
+        public int BufferDepth { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("ingestRatePerSecond")]
+        public double IngestRatePerSecond { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("droppedTotal")]
+        public long DroppedTotal { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("activeSubscribers")]
+        public int ActiveSubscribers { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("chunkCount")]
+        public long ChunkCount { get; set; }
+
+        public string ToJson()
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Serialize(this, options);
+
+        }
+        public static StatsResponse FromJson(string data)
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Deserialize<StatsResponse>(data, options);
+
+        }
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.0.0 (NJsonSchema v11.5.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class AggregateBucket
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("time")]
+        public System.DateTimeOffset Time { get; set; }
+
         [System.Text.Json.Serialization.JsonPropertyName("source")]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        [System.ComponentModel.DataAnnotations.StringLength(256)]
         public string Source { get; set; }
 
-        [System.Text.Json.Serialization.JsonPropertyName("sourceType")]
+        [System.Text.Json.Serialization.JsonPropertyName("level")]
+        public int? Level { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("stream")]
+        public string Stream { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("count")]
+        public long Count { get; set; }
+
+        public string ToJson()
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Serialize(this, options);
+
+        }
+        public static AggregateBucket FromJson(string data)
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Deserialize<AggregateBucket>(data, options);
+
+        }
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.0.0 (NJsonSchema v11.5.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class AggregateRequest
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("metric")]
+        [System.ComponentModel.DataAnnotations.Required]
+        public string Metric { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("groupBy")]
+        public System.Collections.Generic.ICollection<string> GroupBy { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("bucket")]
+        [System.ComponentModel.DataAnnotations.Required]
+        public string Bucket { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("timeRange")]
+        [System.ComponentModel.DataAnnotations.Required]
+        public TimeRangeFilter TimeRange { get; set; } = new TimeRangeFilter();
+
+        [System.Text.Json.Serialization.JsonPropertyName("stream")]
+        public string Stream { get; set; }
+
+        public string ToJson()
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Serialize(this, options);
+
+        }
+        public static AggregateRequest FromJson(string data)
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Deserialize<AggregateRequest>(data, options);
+
+        }
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.0.0 (NJsonSchema v11.5.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class AggregateResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("buckets")]
+        public System.Collections.Generic.ICollection<AggregateBucket> Buckets { get; set; }
+
+        public string ToJson()
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Serialize(this, options);
+
+        }
+        public static AggregateResponse FromJson(string data)
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Deserialize<AggregateResponse>(data, options);
+
+        }
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.0.0 (NJsonSchema v11.5.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class TimeRangeFilter
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("from")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        [System.ComponentModel.DataAnnotations.StringLength(64)]
-        public string SourceType { get; set; }
+        public System.DateTimeOffset From { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("to")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.DateTimeOffset To { get; set; }
+
+        public string ToJson()
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Serialize(this, options);
+
+        }
+        public static TimeRangeFilter FromJson(string data)
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Deserialize<TimeRangeFilter>(data, options);
+
+        }
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.0.0 (NJsonSchema v11.5.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class ConnectorIngestRequest
+    {
 
         [System.Text.Json.Serialization.JsonPropertyName("instanceId")]
         [System.ComponentModel.DataAnnotations.StringLength(128)]
@@ -348,12 +1492,12 @@ namespace HiveLog.Client.Generated
             return System.Text.Json.JsonSerializer.Serialize(this, options);
 
         }
-        public static IngestRequest FromJson(string data)
+        public static ConnectorIngestRequest FromJson(string data)
         {
 
             var options = new System.Text.Json.JsonSerializerOptions();
 
-            return System.Text.Json.JsonSerializer.Deserialize<IngestRequest>(data, options);
+            return System.Text.Json.JsonSerializer.Deserialize<ConnectorIngestRequest>(data, options);
 
         }
     }
@@ -465,6 +1609,608 @@ namespace HiveLog.Client.Generated
             var options = new System.Text.Json.JsonSerializerOptions();
 
             return System.Text.Json.JsonSerializer.Deserialize<LogEntryDto>(data, options);
+
+        }
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.0.0 (NJsonSchema v11.5.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class LevelFilter
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("min")]
+        public int? Min { get; set; }
+
+        public string ToJson()
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Serialize(this, options);
+
+        }
+        public static LevelFilter FromJson(string data)
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Deserialize<LevelFilter>(data, options);
+
+        }
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.0.0 (NJsonSchema v11.5.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class LogEntryResult
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("timestamp")]
+        public System.DateTimeOffset Timestamp { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public System.Guid Id { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("traceId")]
+        public string TraceId { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("spanId")]
+        public string SpanId { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("source")]
+        public string Source { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("sourceType")]
+        public string SourceType { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("instanceId")]
+        public string InstanceId { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("level")]
+        public int Level { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("category")]
+        public string Category { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string Message { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("messageTemplate")]
+        public string MessageTemplate { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("properties")]
+        public string Properties { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("exception")]
+        public string Exception { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("userId")]
+        public System.Guid? UserId { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("requestId")]
+        public string RequestId { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("sessionId")]
+        public string SessionId { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("tags")]
+        public System.Collections.Generic.ICollection<string> Tags { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("stream")]
+        public string Stream { get; set; }
+
+        public string ToJson()
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Serialize(this, options);
+
+        }
+        public static LogEntryResult FromJson(string data)
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Deserialize<LogEntryResult>(data, options);
+
+        }
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.0.0 (NJsonSchema v11.5.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class NaturalQueryRequest
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("query")]
+        public string Query { get; set; }
+
+        public string ToJson()
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Serialize(this, options);
+
+        }
+        public static NaturalQueryRequest FromJson(string data)
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Deserialize<NaturalQueryRequest>(data, options);
+
+        }
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.0.0 (NJsonSchema v11.5.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class NaturalQueryResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("interpretedQuery")]
+        public QueryRequest InterpretedQuery { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("sql")]
+        public string Sql { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("result")]
+        public QueryResponse Result { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("count")]
+        public long? Count { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("confidence")]
+        public double Confidence { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("error")]
+        public string Error { get; set; }
+
+        public string ToJson()
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Serialize(this, options);
+
+        }
+        public static NaturalQueryResponse FromJson(string data)
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Deserialize<NaturalQueryResponse>(data, options);
+
+        }
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.0.0 (NJsonSchema v11.5.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class QueryRequest
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("streams")]
+        public System.Collections.Generic.ICollection<string> Streams { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("sources")]
+        public System.Collections.Generic.ICollection<string> Sources { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("levels")]
+        public LevelFilter Levels { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("timeRange")]
+        public TimeRangeFilter2 TimeRange { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("traceId")]
+        public string TraceId { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("spanId")]
+        public string SpanId { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("parentSpanId")]
+        public string ParentSpanId { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("tags")]
+        public TagFilter Tags { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("search")]
+        public string Search { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("properties")]
+        public System.Collections.Generic.IDictionary<string, object> Properties { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("orderBy")]
+        public string OrderBy { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("limit")]
+        public int Limit { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("cursor")]
+        public string Cursor { get; set; }
+
+        public string ToJson()
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Serialize(this, options);
+
+        }
+        public static QueryRequest FromJson(string data)
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Deserialize<QueryRequest>(data, options);
+
+        }
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.0.0 (NJsonSchema v11.5.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class QueryResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("entries")]
+        public System.Collections.Generic.ICollection<LogEntryResult> Entries { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("nextCursor")]
+        public string NextCursor { get; set; }
+
+        public string ToJson()
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Serialize(this, options);
+
+        }
+        public static QueryResponse FromJson(string data)
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Deserialize<QueryResponse>(data, options);
+
+        }
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.0.0 (NJsonSchema v11.5.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class TagFilter
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("any")]
+        public System.Collections.Generic.ICollection<string> Any { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("all")]
+        public System.Collections.Generic.ICollection<string> All { get; set; }
+
+        public string ToJson()
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Serialize(this, options);
+
+        }
+        public static TagFilter FromJson(string data)
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Deserialize<TagFilter>(data, options);
+
+        }
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.0.0 (NJsonSchema v11.5.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class TimeRangeFilter2
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("from")]
+        public System.DateTimeOffset? From { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("to")]
+        public System.DateTimeOffset? To { get; set; }
+
+        public string ToJson()
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Serialize(this, options);
+
+        }
+        public static TimeRangeFilter2 FromJson(string data)
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Deserialize<TimeRangeFilter2>(data, options);
+
+        }
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.0.0 (NJsonSchema v11.5.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class CreateRuleRequest
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("name")]
+        public string Name { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("isActive")]
+        public bool IsActive { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("trigger")]
+        public RuleTrigger Trigger { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("action")]
+        public RuleAction Action { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("throttle")]
+        public RuleThrottle Throttle { get; set; }
+
+        public string ToJson()
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Serialize(this, options);
+
+        }
+        public static CreateRuleRequest FromJson(string data)
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Deserialize<CreateRuleRequest>(data, options);
+
+        }
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.0.0 (NJsonSchema v11.5.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class RuleAction
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("url")]
+        public string Url { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("bodyTemplate")]
+        public string BodyTemplate { get; set; }
+
+        public string ToJson()
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Serialize(this, options);
+
+        }
+        public static RuleAction FromJson(string data)
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Deserialize<RuleAction>(data, options);
+
+        }
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.0.0 (NJsonSchema v11.5.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class RuleActionResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("url")]
+        public string Url { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("bodyTemplate")]
+        public string BodyTemplate { get; set; }
+
+        public string ToJson()
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Serialize(this, options);
+
+        }
+        public static RuleActionResponse FromJson(string data)
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Deserialize<RuleActionResponse>(data, options);
+
+        }
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.0.0 (NJsonSchema v11.5.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class RuleResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public System.Guid Id { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("name")]
+        public string Name { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("isActive")]
+        public bool IsActive { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("trigger")]
+        public RuleTriggerResponse Trigger { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("action")]
+        public RuleActionResponse Action { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("throttle")]
+        public RuleThrottleResponse Throttle { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("throttleStatus")]
+        public RuleThrottleStatusResponse ThrottleStatus { get; set; }
+
+        public string ToJson()
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Serialize(this, options);
+
+        }
+        public static RuleResponse FromJson(string data)
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Deserialize<RuleResponse>(data, options);
+
+        }
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.0.0 (NJsonSchema v11.5.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class RuleThrottle
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("windowSeconds")]
+        public int WindowSeconds { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("maxFires")]
+        public int MaxFires { get; set; }
+
+        public string ToJson()
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Serialize(this, options);
+
+        }
+        public static RuleThrottle FromJson(string data)
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Deserialize<RuleThrottle>(data, options);
+
+        }
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.0.0 (NJsonSchema v11.5.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class RuleThrottleResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("windowSeconds")]
+        public int WindowSeconds { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("maxFires")]
+        public int MaxFires { get; set; }
+
+        public string ToJson()
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Serialize(this, options);
+
+        }
+        public static RuleThrottleResponse FromJson(string data)
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Deserialize<RuleThrottleResponse>(data, options);
+
+        }
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.0.0 (NJsonSchema v11.5.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class RuleThrottleStatusResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("lastFiredAt")]
+        public System.DateTimeOffset? LastFiredAt { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("fireCountInWindow")]
+        public int FireCountInWindow { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("windowStartAt")]
+        public System.DateTimeOffset? WindowStartAt { get; set; }
+
+        public string ToJson()
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Serialize(this, options);
+
+        }
+        public static RuleThrottleStatusResponse FromJson(string data)
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Deserialize<RuleThrottleStatusResponse>(data, options);
+
+        }
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.0.0 (NJsonSchema v11.5.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class RuleTrigger
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("levelMin")]
+        public int? LevelMin { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("source")]
+        public string Source { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("stream")]
+        public string Stream { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("tags")]
+        public System.Collections.Generic.ICollection<string> Tags { get; set; }
+
+        public string ToJson()
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Serialize(this, options);
+
+        }
+        public static RuleTrigger FromJson(string data)
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Deserialize<RuleTrigger>(data, options);
+
+        }
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.0.0 (NJsonSchema v11.5.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class RuleTriggerResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("levelMin")]
+        public int? LevelMin { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("source")]
+        public string Source { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("stream")]
+        public string Stream { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("tags")]
+        public System.Collections.Generic.ICollection<string> Tags { get; set; }
+
+        public string ToJson()
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Serialize(this, options);
+
+        }
+        public static RuleTriggerResponse FromJson(string data)
+        {
+
+            var options = new System.Text.Json.JsonSerializerOptions();
+
+            return System.Text.Json.JsonSerializer.Deserialize<RuleTriggerResponse>(data, options);
 
         }
     }
