@@ -10,15 +10,17 @@
         "type": "apiKey",
         "headerName": "X-Api-Key",
         "apiAccesses": [
-          { "id": "svc-talents",       "name": "Talents API",       "apiKey": "dev-talents-hivelog-key" },
-          { "id": "svc-userprofiles",  "name": "UserProfiles API",  "apiKey": "dev-userprofiles-hivelog-key" },
-          { "id": "svc-engagement",    "name": "Engagement API",    "apiKey": "dev-engagement-hivelog-key" },
-          { "id": "svc-discovery",     "name": "Discovery API",     "apiKey": "dev-discovery-hivelog-key" },
-          { "id": "svc-jobdates",      "name": "JobDates API",      "apiKey": "dev-jobdates-hivelog-key" },
-          { "id": "svc-blobxxx",       "name": "BlobXXX API",       "apiKey": "dev-blobxxx-hivelog-key" },
-          { "id": "svc-identity",      "name": "Identity API",      "apiKey": "dev-identity-hivelog-key" },
-          { "id": "svc-syncserver",    "name": "SyncServer",        "apiKey": "dev-syncserver-hivelog-key" },
-          { "id": "svc-notifications", "name": "Notifications API", "apiKey": "dev-notifications-hivelog-key" }
+          { "id": "svc-talents",        "name": "Talents API",        "apiKey": "hivekey-dev-talents-012e7909c28a26d03db632c6fd7f62ea" },
+          { "id": "svc-userprofiles",   "name": "UserProfiles API",   "apiKey": "hivekey-dev-userprofiles-4057992b3ecb237bb31925a7f27e3724" },
+          { "id": "svc-engagement",     "name": "Engagement API",     "apiKey": "hivekey-dev-engagement-345d18d26fe6a8915173e343a1571cdb" },
+          { "id": "svc-discovery",      "name": "Discovery API",      "apiKey": "hivekey-dev-discovery-5e52e380f05c56088c11352e50c8d9bb" },
+          { "id": "svc-jobdates",       "name": "JobDates API",       "apiKey": "hivekey-dev-jobdates-147c16360d84144adfae2398f4c40e8c" },
+          { "id": "svc-blobxxx",        "name": "BlobXXX API",        "apiKey": "hivekey-dev-blobxxx-c03e8468e7d05010f2218ee0b4bb14b3" },
+          { "id": "svc-identity",       "name": "Identity API",       "apiKey": "hivekey-dev-identity-a8f3c91b0e7d524f6b2a390d1c847e56" },
+          { "id": "svc-syncserver",     "name": "SyncServer",         "apiKey": "hivekey-dev-syncserver-99d0d35a1136681c74aa9301e16e2167" },
+          { "id": "svc-notifications",  "name": "Notifications API",  "apiKey": "hivekey-dev-notifications-8eaebec1858cde22488140c04b06971f" },
+          { "id": "svc-subscription",   "name": "Subscription API",   "apiKey": "hivekey-dev-subscription-05bc70c3f83cf2f4cc4e52e4706844f8" },
+          { "id": "svc-billing",        "name": "Billing API",        "apiKey": "hivekey-dev-billing-2e6e0879a229b429ffc83f4323e08eed" }
         ]
       }
     },
