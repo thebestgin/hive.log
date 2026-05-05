@@ -52,4 +52,11 @@ public class LogEntryDto
 
     [StringLength(64)]
     public string Stream { get; set; } = "app";
+
+    /// <summary>
+    /// Source file and line of the log call (e.g. "talent-card.svelte:42").
+    /// Populated by AppLogger via stack capture on the frontend.
+    /// </summary>
+    [StringLength(256)]
+    public string? Caller { get; set; }
 }

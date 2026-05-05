@@ -55,6 +55,7 @@ public sealed class LogEntryCopyWriter
             await writer.WriteAsync(e.Tags ?? Array.Empty<string>(), NpgsqlDbType.Array | NpgsqlDbType.Text, ct);
             await writer.WriteAsync(e.Stream, NpgsqlDbType.Text, ct);
             await writer.WriteAsync(e.IsAuthenticated, NpgsqlDbType.Boolean, ct);
+            await WriteNullableAsync(writer, e.Caller, NpgsqlDbType.Text, ct);
         }
 
         await writer.CompleteAsync(ct);
@@ -96,7 +97,8 @@ public sealed class LogEntryCopyWriter
             Col(nameof(LogEntry.SessionId)),
             Col(nameof(LogEntry.Tags)),
             Col(nameof(LogEntry.Stream)),
-            Col(nameof(LogEntry.IsAuthenticated)));
+            Col(nameof(LogEntry.IsAuthenticated)),
+            Col(nameof(LogEntry.Caller)));
 
         return $"COPY {table} ({columns}) FROM STDIN (FORMAT binary)";
     }

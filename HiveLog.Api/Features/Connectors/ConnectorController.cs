@@ -99,6 +99,7 @@ public class ConnectorController : ControllerBase
                 Tags = dto.Tags,
                 Stream = dto.Stream,
                 IsAuthenticated = isAuthenticated,
+                Caller = dto.Caller,
             };
 
             var written = await _buffer.TryWriteAsync(entry, _opts.WriteTimeout, ct);

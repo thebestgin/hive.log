@@ -56,4 +56,13 @@ public class LogEntry
 
     /// <summary>True when the ingest request carried a valid JWT Bearer token.</summary>
     public bool IsAuthenticated { get; set; }
+
+    // --- Caller ---
+
+    /// <summary>
+    /// Source file and line number of the log call (e.g. "talent-card.svelte:42").
+    /// Extracted client-side via stack capture by AppLogger — allows direct filtering
+    /// without JSONB parsing. Null for backend service logs.
+    /// </summary>
+    public string? Caller { get; set; }
 }

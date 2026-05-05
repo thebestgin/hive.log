@@ -24,7 +24,7 @@ public static class QueryBuilder
 
         sql.AppendLine($"SELECT timestamp, id, trace_id, span_id, parent_span_id, source, source_type, instance_id,");
         sql.AppendLine($"       level, category, message, message_template, properties, exception,");
-        sql.AppendLine($"       user_id, request_id, session_id, tags, stream");
+        sql.AppendLine($"       user_id, request_id, session_id, tags, stream, caller");
         sql.AppendLine($"FROM {AllowedTable}");
         sql.AppendLine("WHERE 1=1");
 

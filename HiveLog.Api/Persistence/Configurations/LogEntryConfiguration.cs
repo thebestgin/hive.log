@@ -37,5 +37,9 @@ public class LogEntryConfiguration : IEntityTypeConfiguration<LogEntry>
         // W3C Trace Context: supports "all logs in trace X" and "children of span Y"
         builder.HasIndex(e => new { e.TraceId, e.ParentSpanId })
             .HasDatabaseName("ix_log_entries_trace_id_parent_span_id");
+
+        // Caller: enables "all errors from talent-card.svelte" without JSONB parsing
+        builder.HasIndex(e => e.Caller)
+            .HasDatabaseName("ix_log_entries_caller");
     }
 }

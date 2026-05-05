@@ -35,4 +35,7 @@ public class LogEntryResult
 
     public string[]? Tags { get; set; }
     public string Stream { get; set; } = null!;
+
+    /// <summary>Source file and line of the log call (e.g. "talent-card.svelte:42"). Frontend-only.</summary>
+    public string? Caller { get; set; }
 }

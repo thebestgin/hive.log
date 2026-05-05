@@ -969,6 +969,12 @@
             "minLength": 0,
             "type": "string",
             "nullable": true
+          },
+          "caller": {
+            "maxLength": 256,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -1060,6 +1066,10 @@
             "nullable": true
           },
           "stream": {
+            "type": "string",
+            "nullable": true
+          },
+          "caller": {
             "type": "string",
             "nullable": true
           }
