@@ -17,6 +17,7 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.OpenApi;
 using Npgsql;
 using Swashbuckle.AspNetCore.Swagger;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using OpenApiInfo = Microsoft.OpenApi.OpenApiInfo;
 
 namespace HiveLog.Api;
@@ -165,7 +166,16 @@ public class Program
         builder.Services.AddSwaggerGen(c =>
         {
             c.SwaggerDoc("v1", new OpenApiInfo { Title = "hive.log", Version = "v1" });
+            c.SwaggerDoc("frontend", new OpenApiInfo { Title = "hive.log frontend", Version = "v1" });
             c.CustomSchemaIds(type => type.FullName);
+            c.CustomOperationIds(apiDesc =>
+                apiDesc.TryGetMethodInfo(out var m) ? m.Name : null);
+            c.DocInclusionPredicate((docName, apiDesc) =>
+            {
+                if (docName == "frontend")
+                    return apiDesc.RelativePath?.Contains("/ingest") == true;
+                return docName == "v1";
+            });
         });
 
         // ---------------------------------------------------------------------------
@@ -198,6 +208,7 @@ public class Program
 
         // Save swagger.json for tooling / client generation
         SaveSwaggerJson(app.Services, "v1", "OpenApi/swagger.json");
+        SaveSwaggerJson(app.Services, "frontend", "OpenApi/swagger-frontend.json");
 
         // Health endpoint returns JSON body including bufferDepth + droppedTotal
         app.MapHealthChecks("/health", new HealthCheckOptions
