@@ -21,6 +21,9 @@ public static class ServiceCollectionExtensions
     {
         builder.Services.Configure<HiveLogOptions>(configuration);
 
+        if (!configuration.GetValue("Enabled", true))
+            return builder;
+
         // Shared buffer — single instance shared by ILoggerProvider + IHiveLogClient
         builder.Services.AddSingleton<HiveLogBatchBuffer>(sp =>
         {

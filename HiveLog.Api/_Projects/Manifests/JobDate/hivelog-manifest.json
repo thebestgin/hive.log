@@ -20,7 +20,8 @@
           { "id": "svc-syncserver",     "name": "SyncServer",         "apiKey": "hivekey-dev-syncserver-99d0d35a1136681c74aa9301e16e2167" },
           { "id": "svc-notifications",  "name": "Notifications API",  "apiKey": "hivekey-dev-notifications-8eaebec1858cde22488140c04b06971f" },
           { "id": "svc-subscription",   "name": "Subscription API",   "apiKey": "hivekey-dev-subscription-05bc70c3f83cf2f4cc4e52e4706844f8" },
-          { "id": "svc-billing",        "name": "Billing API",        "apiKey": "hivekey-dev-billing-2e6e0879a229b429ffc83f4323e08eed" }
+          { "id": "svc-billing",        "name": "Billing API",        "apiKey": "hivekey-dev-billing-2e6e0879a229b429ffc83f4323e08eed" },
+          { "id": "svc-places",         "name": "Places API",         "apiKey": "hivekey-dev-places-7f3a2c91b4e8d056f1a739e2c085b47d" }
         ]
       }
     },

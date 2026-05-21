@@ -4,6 +4,9 @@ namespace HiveLog.Client;
 
 public class HiveLogOptions
 {
+    /// <summary>Master switch. When false, AddHiveLog skips all registrations — no provider, no HttpClient, no background service.</summary>
+    public bool Enabled { get; set; } = true;
+
     /// <summary>HiveLog API base URL. Example: http://localhost:5099</summary>
     public string BaseUrl { get; set; } = null!;
 
