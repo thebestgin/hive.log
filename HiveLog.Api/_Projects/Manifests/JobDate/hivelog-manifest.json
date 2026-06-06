@@ -33,7 +33,8 @@
       "auth": {
         "type": "none"
       },
-      "rateLimit": { "maxEntries": 5000, "windowSeconds": 60 }
+      "rateLimit": { "maxEntries": 5000, "windowSeconds": 60 },
+      "minLevel": 3
     }
   ]
 }
