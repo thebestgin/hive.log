@@ -18,6 +18,13 @@ Configuration is loaded from `.env` (via `DotNetEnv`) and environment variables.
 | `Logging__LogLevel__Microsoft.AspNetCore` | `Warning` | ASP.NET Core framework log level |
 | `AllowedHosts` | `*` | Allowed host headers |
 
+## Retention / TimescaleDB
+
+| Key | Default | Description |
+|---|---|---|
+| `Retention__RetentionDays` | `30` | Chunks älter als N Tage werden gedroppt |
+| `Retention__ChunkIntervalHours` | `1` | TimescaleDB-Chunk-Intervall in Stunden — wird beim Start via `set_chunk_time_interval` gesetzt. Kleine Chunks (Stunden) sind Voraussetzung dafür, dass Retention und Compression greifen (siehe `06-timescaledb.md`). |
+
 ## Ingest pipeline (planned -- not yet implemented)
 
 | Key | Default | Description |

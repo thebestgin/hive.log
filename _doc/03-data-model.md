@@ -46,14 +46,15 @@ CREATE TABLE log_entries (
 
 ```sql
 -- Created in EF Core migration via raw SQL (guarded by pg_available_extensions check)
-SELECT create_hypertable('log_entries', 'timestamp',
-    chunk_time_interval => INTERVAL '1 hour'
-);
+-- NOTE: no chunk_time_interval here → inherits TimescaleDB's 7-day default.
+SELECT create_hypertable('log_entries', 'timestamp', if_not_exists => true);
 ```
+
+Das Chunk-Intervall wird **beim Start** durch `TimescalePolicyInitializer` via `set_chunk_time_interval` auf den korrekten Wert gesetzt — konfigurierbar über `Retention__ChunkIntervalHours` (default `1`). Die Migration selbst setzt es bewusst nicht (sonst wäre der Wert auf den Migrations-Zeitpunkt eingefroren und für bestehende Deployments nicht änderbar). Siehe `06-timescaledb.md` für das WHY (7-Tage-Default-Falle).
 
 ### Why 1-hour chunks
 
-At expected Dev volume (10k-100k logs/hour) each chunk is 50-500MB uncompressed -- within the recommended 25-100MB range for optimal TimescaleDB performance. For production (>1M logs/hour), reduce to 15-minute chunks.
+At expected Dev volume (10k-100k logs/hour) each chunk is 5-50MB uncompressed -- within the recommended 25-100MB range for optimal TimescaleDB performance. For production (>1M logs/hour), reduce to 15-minute chunks. Small chunks are also required for retention and compression to work: TimescaleDB only drops/compresses chunks that are **fully** older than the configured threshold -- a 7-day chunk never ages out.
 
 ## Indexes
 

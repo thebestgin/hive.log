@@ -43,12 +43,25 @@ This pattern ensures the app starts and migrations run even in environments with
 
 ## Chunk Interval
 
-**Dev:** 1 hour per chunk.
+**Default:** 1 Stunde pro Chunk (`RetentionOptions.ChunkIntervalHours`, default `1`).
 
-Sizing guideline (target 25-100MB per chunk uncompressed):
-- 10k logs/hour at ~500 bytes/log = ~5MB/chunk (conservative, fine for 1h)
-- 100k logs/hour = ~50MB/chunk (good for 1h)
-- 1M+ logs/hour = reduce to 15 minutes
+`TimescalePolicyInitializer` setzt das Intervall beim Start explizit via:
+
+```sql
+SELECT set_chunk_time_interval('log_entries', INTERVAL '<ChunkIntervalHours> hours');
+```
+
+**Warum das nötig ist — die 7-Tage-Falle:**
+TimescaleDB hat als Default-`chunk_time_interval` **7 Tage**, wenn beim `create_hypertable`-Aufruf kein Intervall gesetzt wird. Retention (`drop_after`) und Compression (`compress_after`) werden aber erst wirksam, wenn ein Chunk **vollständig** älter als die jeweilige Grenze ist. Ein 7-Tage-Chunk, der noch aktiv beschrieben wird, schließt nie → wird nie komprimiert, nie gedroppt → unbegrenztes Wachstum.
+
+Die EF Core Migration ruft `create_hypertable('log_entries', 'timestamp', if_not_exists => true)` **ohne** `chunk_time_interval` auf → die Hypertable erbt den 7-Tage-Default (genau die Falle oben). `TimescalePolicyInitializer` erzwingt das korrekte Intervall **beim Start** via `set_chunk_time_interval` — so greift eine geänderte `ChunkIntervalHours`-Konfiguration sofort und ohne neue Migration, auch für bestehende Deployments. (Das Setzen wirkt auf **neue** Chunks; bestehende Über-Chunks altern natürlich aus.)
+
+**Live-Zahlen (00711):** Chunk-Intervall 7d→1h: DB-Größe 3608 MB → 12 MB nach erstem Drop. Compression-Faktor 11,0× (3952 kB → 360 kB) auf den JSONB-Payloads.
+
+Sizing-Richtwert (Ziel 25–100 MB pro Chunk unkomprimiert):
+- 10k Logs/Stunde à ~500 Byte = ~5 MB/Chunk (konservativ, 1h passt)
+- 100k Logs/Stunde = ~50 MB/Chunk (gut für 1h)
+- 1M+ Logs/Stunde → auf 15 Minuten reduzieren
 
 ## Compression
 
@@ -60,21 +73,21 @@ ALTER TABLE log_entries SET (
     timescaledb.compress_orderby = 'timestamp DESC'
 );
 
-SELECT add_compression_policy('log_entries', INTERVAL '2 hours',
-    if_not_exists => true);
+SELECT add_compression_policy('log_entries', INTERVAL '2 hours');
 ```
 
 **Why `segmentby = 'source, stream'`:** Queries almost always filter by source and/or stream. Segmentation allows TimescaleDB to skip irrelevant segments entirely when reading compressed data.
 
-**Expected compression ratio:** 10-15x for structured logs (50MB chunk → ~4MB compressed).
+**Expected compression ratio:** 10–15× für strukturierte Logs (50 MB Chunk → ~4 MB komprimiert). Live gemessen: 11,0× auf JSONB-Payloads (00711).
 
 ## Retention Policies
 
 ```sql
 -- Chunk-level retention (drops entire chunks older than N days)
-SELECT add_retention_policy('log_entries', INTERVAL '30 days',
-    if_not_exists => true);
+SELECT add_retention_policy('log_entries', INTERVAL '<RetentionDays> days');
 ```
+
+**Policies werden beim Start immer entfernt und neu angelegt** (remove + re-add, nicht `if_not_exists => true`). Dadurch greift eine geänderte `RetentionDays`- oder `ChunkIntervalHours`-Konfiguration sofort beim nächsten Start — ohne manuellen DB-Eingriff. `TimescalePolicyInitializer` erledigt das in der Reihenfolge: Chunk-Intervall setzen → Policies entfernen → Policies neu anlegen.
 
 TimescaleDB retention drops whole chunks -- it cannot filter individual rows by level. For fine-grained level-based retention, use a nightly cleanup job:
 
