@@ -1,11 +1,17 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
+# Copy csproj files for restore
 COPY hive.log/HiveLog.Api/HiveLog.Api.csproj hive.log/HiveLog.Api/
+COPY hivecache/src/HiveCache/HiveCache.csproj hivecache/src/HiveCache/
+COPY hivecache/src/HiveCache.Postgres/HiveCache.Postgres.csproj hivecache/src/HiveCache.Postgres/
 
 RUN dotnet restore hive.log/HiveLog.Api/HiveLog.Api.csproj
 
+# Copy all source
 COPY hive.log/ hive.log/
+COPY hivecache/src/HiveCache/ hivecache/src/HiveCache/
+COPY hivecache/src/HiveCache.Postgres/ hivecache/src/HiveCache.Postgres/
 
 RUN dotnet publish hive.log/HiveLog.Api/HiveLog.Api.csproj -c Release -o /app/publish
 

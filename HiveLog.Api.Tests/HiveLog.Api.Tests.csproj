@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\HiveLog.Api\HiveLog.Api.csproj" />
+    <ProjectReference Include="..\..\hivecache\src\HiveCache\HiveCache.csproj" />
   </ItemGroup>
 
 </Project>

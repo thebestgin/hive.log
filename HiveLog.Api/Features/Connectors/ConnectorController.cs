@@ -22,17 +22,20 @@ public class ConnectorController : ControllerBase
     private readonly IngestMetrics _metrics;
     private readonly SelfLogger _selfLogger;
     private readonly IngestOptions _opts;
+    private readonly ConnectorRateLimiter _rateLimiter;
 
     public ConnectorController(
         IngestBuffer buffer,
         IngestMetrics metrics,
         SelfLogger selfLogger,
-        IOptions<IngestOptions> opts)
+        IOptions<IngestOptions> opts,
+        ConnectorRateLimiter rateLimiter)
     {
         _buffer = buffer;
         _metrics = metrics;
         _selfLogger = selfLogger;
         _opts = opts.Value;
+        _rateLimiter = rateLimiter;
     }
 
     /// <summary>
@@ -47,6 +50,7 @@ public class ConnectorController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> Ingest(
         [FromRoute] string connectorId,
@@ -57,6 +61,21 @@ public class ConnectorController : ControllerBase
             return BadRequest(ModelState);
 
         var connector = (ConnectorDefinition)HttpContext.Items["Connector"]!;
+
+        // Per-connector ingest rate limit (00712). Counts entries; the flood vector is large batches.
+        if (connector.RateLimit is { } rl)
+        {
+            var clientKey = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var (allowed, retryAfter) = await _rateLimiter.TryConsumeAsync(
+                connectorId, clientKey, request.Entries.Count, rl, ct);
+            if (!allowed)
+            {
+                Response.Headers.RetryAfter = retryAfter.ToString();
+                _metrics.RecordDropped(request.Entries.Count);
+                return StatusCode(StatusCodes.Status429TooManyRequests,
+                    new { error = "Rate limit exceeded", retryAfterSeconds = retryAfter });
+            }
+        }
 
         // If a valid JWT is present (regardless of connector auth type), use server-side UserId.
         // This preserves the old WebAppConnector behavior: AllowAnonymous + optional JWT.
@@ -77,6 +96,10 @@ public class ConnectorController : ControllerBase
         int accepted = 0;
         foreach (var dto in request.Entries)
         {
+            // Optional server-side min-level guardrail per connector (00712). Default (null) = accept all.
+            if (connector.MinLevel is { } minLevel && dto.Level < minLevel)
+                continue;   // dropped silently; request still returns 202
+
             var entry = new LogEntry
             {
                 Timestamp = dto.Timestamp,

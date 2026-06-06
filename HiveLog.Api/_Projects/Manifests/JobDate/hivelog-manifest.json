@@ -32,7 +32,8 @@
       "sourceType": "frontend",
       "auth": {
         "type": "none"
-      }
+      },
+      "rateLimit": { "maxEntries": 5000, "windowSeconds": 60 }
     }
   ]
 }

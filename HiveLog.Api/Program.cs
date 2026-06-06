@@ -1,4 +1,7 @@
 using System.Text.Json;
+using HiveCache;
+using HiveCache.DependencyInjection;
+using HiveCache.Postgres.DependencyInjection;
 using HiveLog.Api.Features.Admin;
 using HiveLog.Api.Features.Aggregate;
 using HiveLog.Api.Features.Connectors;
@@ -100,6 +103,24 @@ public class Program
         builder.Services.AddSingleton<AdminApiKeyFilter>();
         builder.Services.AddSingleton<ConnectorAuthFilter>();
         builder.Services.AddSingleton<RuntimeRetentionService>();
+
+        // ---------------------------------------------------------------------------
+        // Per-Connector Rate Limiter — HiveCache L1+L2 (Postgres), entry-count based (00712)
+        // WHY PrimaryPolling: dev-stack uses PgBouncer-compatible config (mirrors entitlements pattern).
+        // ---------------------------------------------------------------------------
+        builder.Services
+            .AddHiveCache<long>(opts =>
+            {
+                opts.Name = "hivelog_ratelimit";
+                opts.Mode = HiveCacheMode.PrimaryPolling;
+                opts.DefaultTtl = TimeSpan.FromMinutes(5);
+                opts.MaxEntries = 100_000;
+            })
+            .UsePostgres(pg =>
+            {
+                pg.ConnectionString = connectionString;
+            });
+        builder.Services.AddSingleton<ConnectorRateLimiter>();
 
         // ---------------------------------------------------------------------------
         // NL-to-SQL — Stufe 2: OpenAI Chat Completions fallback
