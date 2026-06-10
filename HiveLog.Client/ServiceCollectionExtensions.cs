@@ -41,7 +41,12 @@ public static class ServiceCollectionExtensions
             client.BaseAddress = new Uri(opts.BaseUrl);
             client.DefaultRequestHeaders.Add("X-Api-Key", opts.ApiKey);
             client.Timeout = TimeSpan.FromSeconds(10);
-        });
+        })
+        // gzip outgoing ingest bodies (00741) — backend producers are the highest-volume source.
+        // One handler in the shared HiveLog.Client lib → every service using it benefits automatically.
+        .AddHttpMessageHandler<GzipRequestHandler>();
+
+        builder.Services.AddTransient<GzipRequestHandler>();
 
         // Prevent feedback loop: suppress the HiveLog HTTP client's own logs from being forwarded to HiveLog
         builder.AddFilter<HiveLogProvider>("System.Net.Http.HttpClient.hivelog", LogLevel.None);
