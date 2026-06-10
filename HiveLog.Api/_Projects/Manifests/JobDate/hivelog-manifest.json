@@ -34,7 +34,7 @@
         "type": "none"
       },
       "rateLimit": { "maxEntries": 10000, "windowSeconds": 60 },
-      "minLevel": 3
+      "minLevel": 2
     }
   ]
 }
