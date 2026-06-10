@@ -161,6 +161,14 @@ public class Program
             .AddCheck<OllamaHealthCheck>("ollama");
 
         // ---------------------------------------------------------------------------
+        // Request decompression (00741) — accept gzip/br/deflate-encoded ingest bodies (built-in).
+        // HiveLog ingest is high-volume, highly repetitive mass data; producers compress the body
+        // (frontend: native CompressionStream gzip) and the server transparently decompresses here
+        // before model binding. Saves bandwidth + lets larger batches fit one request. gzip is the
+        // chosen wire format: it is the fastest codec natively available in the browser CompressionStream
+        // (brotli compression is not), so no client-side dependency is needed.
+        builder.Services.AddRequestDecompression();
+
         // Controllers + JSON
         // ---------------------------------------------------------------------------
         builder.Services.AddControllers()
@@ -221,6 +229,9 @@ public class Program
         {
             c.SwaggerEndpoint("/swagger/v1/swagger.json", "hive.log");
         });
+
+        // Decompress request bodies (Content-Encoding: gzip/br/deflate) before binding. (00741)
+        app.UseRequestDecompression();
 
         app.UseAuthentication();
         app.UseAuthorization();
