@@ -230,6 +230,30 @@ public class Program
             c.SwaggerEndpoint("/swagger/v1/swagger.json", "hive.log");
         });
 
+        // Map a malformed compressed body (Content-Encoding lies / corrupt gzip) to 400, not 500.
+        // UseRequestDecompression throws InvalidDataException lazily when the body is read during model
+        // binding; unwrapped it bubbles to a generic 500. Boundary hardening for the public ingest. (00741)
+        app.Use(async (context, next) =>
+        {
+            try
+            {
+                await next();
+            }
+            catch (System.IO.InvalidDataException)
+            {
+                if (!context.Response.HasStarted)
+                {
+                    context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                    await context.Response.WriteAsJsonAsync(new Microsoft.AspNetCore.Mvc.ProblemDetails
+                    {
+                        Title = "Invalid compressed request body",
+                        Detail = "The request declared Content-Encoding but the body could not be decompressed.",
+                        Status = StatusCodes.Status400BadRequest,
+                    });
+                }
+            }
+        });
+
         // Decompress request bodies (Content-Encoding: gzip/br/deflate) before binding. (00741)
         app.UseRequestDecompression();
 
