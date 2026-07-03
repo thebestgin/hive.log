@@ -67,7 +67,10 @@ internal sealed class HiveLogSenderService : BackgroundService
                 await CollectBatchAdaptiveAsync(batch, ct);
                 await SendBatchWithRetryAsync(batch, ct);
             }
-            catch (OperationCanceledException) { break; }
+            // Only a ct-driven cancel is a shutdown. An HttpClient timeout also throws
+            // OperationCanceledException (TaskCanceledException) — before 00918 it matched an
+            // unfiltered catch here and permanently ended log shipping without any warning.
+            catch (OperationCanceledException) when (ct.IsCancellationRequested) { break; }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "[HiveLog] SenderService unexpected error");
@@ -139,22 +142,31 @@ internal sealed class HiveLogSenderService : BackgroundService
                 _metrics.RecordSent(batch.Count);
                 return;
             }
-            catch (HiveLogBackendClientException ex) when (ex.StatusCode == 503 && attempt < RetryDelays.Length - 1)
+            catch (HiveLogBackendClientException ex) when (IsRetryableStatus(ex.StatusCode) && attempt < RetryDelays.Length - 1)
             {
-                // Server backpressure — retry with backoff
+                // Server backpressure/overload (429/5xx) — retry with backoff (00918)
                 _metrics.RecordRetry();
                 await Task.Delay(RetryDelays[attempt], ct);
             }
             catch (HiveLogBackendClientException ex)
             {
-                // Other non-success (4xx) — no point retrying
+                // Non-retryable status (4xx) or retryable exhausted — drop
                 _logger.LogWarning("[HiveLog] Ingest returned {StatusCode}, dropping {Count} entries",
                     ex.StatusCode, batch.Count);
                 _metrics.RecordDropped(batch.Count);
                 return;
             }
-            catch (Exception ex) when (ex is not OperationCanceledException)
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
             {
+                // Real shutdown — propagate so the caller can stop cleanly
+                throw;
+            }
+            catch (Exception ex)
+            {
+                // Includes HttpClient's own 10s timeout, which surfaces as TaskCanceledException
+                // WITHOUT ct being cancelled. Before 00918 that escaped this handler entirely and
+                // silently killed the sender loop for the process lifetime — treat it as a normal
+                // send failure (retry, then drop) instead.
                 if (attempt < RetryDelays.Length - 1)
                 {
                     _metrics.RecordRetry();
@@ -170,6 +182,12 @@ internal sealed class HiveLogSenderService : BackgroundService
             }
         }
     }
+
+    /// <summary>
+    /// 429 (rate limit) and all 5xx are transient server-side conditions worth a backoff retry;
+    /// remaining 4xx are caller errors that no retry can heal (00918).
+    /// </summary>
+    private static bool IsRetryableStatus(int statusCode) => statusCode == 429 || statusCode >= 500;
 
     private static LogEntryDto MapToDto(ClientLogEntry entry) => new()
     {
