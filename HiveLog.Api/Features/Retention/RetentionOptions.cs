@@ -25,4 +25,30 @@ public class RetentionOptions
 
     /// <summary>Fine-grained retention: Info (level 2) entries older than this are deleted. Default: 30.</summary>
     public int InfoRetentionDays { get; set; } = 30;
+
+    /// <summary>
+    /// UTC start of the nightly window in which the fine-grained cleanup may run. Format: HH:mm.
+    /// WHY a night window (00925): the row-level deletes compete with live ingest (bulk COPY)
+    /// and query traffic. The old schedule ("1h after startup, then every 24h") drifted with
+    /// deploy time — a 14:00 deploy meant a daily bulk delete at ~15:00, during peak.
+    /// Mirrors the SyncServer CollectionCleanup pattern (00895).
+    /// </summary>
+    public string CleanupWindowStartUtc { get; set; } = "02:00";
+
+    /// <summary>UTC end (exclusive) of the nightly cleanup window. Format: HH:mm.</summary>
+    public string CleanupWindowEndUtc { get; set; } = "03:00";
+
+    /// <summary>
+    /// Maximum rows deleted per DELETE statement per level-group. Controls DB load.
+    /// WHY batched (00925): a single DELETE over a full day of Debug/Trace logs can hit
+    /// hundreds of thousands of rows in one statement — lock/I/O spike on the hypertable.
+    /// Smaller batches with breathing pauses interleave with live ingest.
+    /// </summary>
+    public int CleanupBatchSize { get; set; } = 5000;
+
+    /// <summary>Parses CleanupWindowStartUtc for comparison with DateTime.UtcNow.TimeOfDay.</summary>
+    public TimeSpan ParsedCleanupStartUtc => TimeSpan.Parse(CleanupWindowStartUtc);
+
+    /// <summary>Parses CleanupWindowEndUtc for comparison with DateTime.UtcNow.TimeOfDay.</summary>
+    public TimeSpan ParsedCleanupEndUtc => TimeSpan.Parse(CleanupWindowEndUtc);
 }
